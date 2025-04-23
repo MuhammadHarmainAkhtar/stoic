@@ -1,15 +1,6 @@
-import Image, { type ImageProps } from "next/image";
-import { Button } from "@repo/ui/button";
-import styles from "./page.module.css";
+import React from 'react'
 
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
-};
-
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, ...rest } = props;
-
+const page = () => {
   return (
     <>
       <Image {...rest} src={srcLight} className="imgLight" />
@@ -98,5 +89,7 @@ export default function Home(): JSX.Element {
         </a>
       </footer>
     </div>
-  );
+  )
 }
+
+export default page
