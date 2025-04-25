@@ -14,6 +14,7 @@ const config: Config = {
       fontFamily: {
         MorrisRoman: ["MorrisRoman", "sans-serif"],
         MorrisRomanAlt: ["MorrisRomanAlternate", "sans-serif"],
+        Greek: ["Greek-Freak", "sans-serif"],
       },
       colors: {
         background: "hsl(var(--background))",

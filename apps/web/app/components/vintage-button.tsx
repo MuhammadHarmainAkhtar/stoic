@@ -16,7 +16,7 @@ export default function VintageButtons({ className ,name }: Props) {
       <div className="flex flex-col items-center justify-center">
         <Link
           href="#get-started"
-          className="relative w-full max-w-xs transition-transform duration-200 font-[MorrisRoman]"
+          className="relative w-full max-w-xs transition-transform duration-200"
           onMouseEnter={() => setHoverButton(true)}
           onMouseLeave={() => setHoverButton(false)}
           style={{ transform: hoverButton ? "scale(1.01)" : "scale(1)" }}
@@ -113,7 +113,7 @@ export default function VintageButtons({ className ,name }: Props) {
               className="relative px-6 py-3 text-center"
               style={{ zIndex: 2 }}
             >
-              <span className= {`${className}text-amber-950`}>
+              <span className= {`${className} text-amber-950`}>
                 {name}
               </span>
             </div>
