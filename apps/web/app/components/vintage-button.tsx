@@ -16,7 +16,7 @@ export default function VintageButtons({ className ,name }: Props) {
       <div className="flex flex-col items-center justify-center">
         <Link
           href="#get-started"
-          className="relative w-full max-w-xs transition-transform duration-200"
+          className="relative w-full max-w-xs transition-transform duration-200 font-[Germania]"
           onMouseEnter={() => setHoverButton(true)}
           onMouseLeave={() => setHoverButton(false)}
           style={{ transform: hoverButton ? "scale(1.01)" : "scale(1)" }}

@@ -6,14 +6,14 @@ const page = () => {
     <>
       <main className="w-full h-full">
         <h1
-          style={{ fontFamily: "MorrisRoman" }}
+          style={{ fontFamily: "Germania" }}
           className="text-8xl text-[#5C3810] text-center mt-20"
         >
-         WELCOME TO THE PAGE
+         welcome to the page
         </h1>
         <div className="mt-20 flex flex-col gap-5">
-          <VintageButtons className="font-bold text-3xl" name="GET STARTED" />
-          <VintageButtons className="font-bold text-3xl" name="LEARN MORE" />
+          <VintageButtons className="font-bold text-3xl" name="get started" />
+          <VintageButtons className="font-bold text-3xl" name="learn more" />
         </div>
       </main>
     </>
