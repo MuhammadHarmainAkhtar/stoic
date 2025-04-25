@@ -13,10 +13,10 @@ export default function VintageButtons({ className ,name }: Props) {
 
   return (
     <>
-      <div className="flex flex-col items-center justify-center">
+      <div className="flex">
         <Link
           href="#get-started"
-          className="relative w-full max-w-xs transition-transform duration-200 font-[Germania]"
+          className="max-w-xs transition-transform duration-200 font-bold font-[bruneyfont]"
           onMouseEnter={() => setHoverButton(true)}
           onMouseLeave={() => setHoverButton(false)}
           style={{ transform: hoverButton ? "scale(1.01)" : "scale(1)" }}
@@ -30,7 +30,6 @@ export default function VintageButtons({ className ,name }: Props) {
           url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")
         `,
               backgroundBlendMode: "multiply",
-              padding: "12px",
             }}
           >
             {/* Outer hand-drawn border */}
@@ -110,10 +109,10 @@ export default function VintageButtons({ className ,name }: Props) {
 
             {/* Button content */}
             <div
-              className="relative px-6 py-3 text-center"
+              className="relative px-5 py-3 text-center"
               style={{ zIndex: 2 }}
             >
-              <span className= {`${className} text-amber-950`}>
+              <span className= {`${className}`}>
                 {name}
               </span>
             </div>
