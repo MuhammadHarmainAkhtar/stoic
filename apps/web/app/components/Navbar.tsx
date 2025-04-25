@@ -1,7 +1,14 @@
 "use client";
-// import Link from "next/link";
 import React from "react";
 import Image from "next/image";
+
+const navItems = [
+  { name: "Home", icon: "/HomeIcon.png" },
+  { name: "SageBot", icon: "/SageBot.png" },
+  { name: "Tribe", icon: "/Tribe.png" },
+  { name: "Profile", icon: "/Profile.png" },
+  { name: "Settings", icon: "/settingsIcon.png" },
+];
 
 const Navbar = () => {
   return (
@@ -11,7 +18,7 @@ const Navbar = () => {
         className="absolute inset-0 bg-no-repeat bg-center"
         style={{
           backgroundImage: 'url("/ancientframe.png")',
-          backgroundSize: "100% 100%", // Stretch to fill entire container
+          backgroundSize: "100% 100%",
           height: "100%",
           width: "100%",
         }}
@@ -22,7 +29,7 @@ const Navbar = () => {
         className="relative flex items-center justify-between w-full px-2 py-4 mx-auto"
         style={{
           minHeight: "150px",
-          maxWidth: "75%", // Even narrower to bring elements much closer
+          maxWidth: "75%",
         }}
       >
         {/* Logo Section - Left */}
@@ -39,40 +46,18 @@ const Navbar = () => {
         {/* Navigation Menu - Center */}
         <div className="flex-grow flex justify-center mt-4 z-10 mx-0">
           <ul className="flex space-x-10 text-amber-900 font-semibold text-base">
-            <div className="flex items-center gap-2">
-            <li className="hover:text-amber-600 hover:underline cursor-pointer transition-colors duration-200">
-              Home
-            </li>
-            <img src="/HomeIcon.png" className="h-10 rounded-lg" alt="" />
-            </div>
-
-            <div className="flex items-center gap-2">
-            <li className="hover:text-amber-600 hover:underline cursor-pointer transition-colors duration-200">
-              SageBot
-            </li>
-            <img src="/SageBot.png" className="h-10 rounded-lg" alt="" />
-            </div>
-
-            <div className="flex items-center gap-2">
-            <li className="hover:text-amber-600 hover:underline cursor-pointer transition-colors duration-200">
-              Tribe
-            </li>
-            <img src="/Tribe.png" className="h-10 rounded-lg" alt="" />
-            </div>
-
-            <div className="flex items-center gap-2">
-            <li className="hover:text-amber-600 hover:underline cursor-pointer transition-colors duration-200">
-              Profile
-            </li>
-            <img src="/Profile.png" className="h-10 rounded-lg" alt="" />
-            </div>
-            
-            <div className="flex items-center gap-2">
-            <li className="hover:text-amber-600 hover:underline cursor-pointer transition-colors duration-200">
-              Settings
-            </li>
-            <img src="/settingsIcon.png" className="h-10 rounded-lg" alt="" />
-            </div>
+            {navItems.map((item) => (
+              <div key={item.name} className="flex items-center gap-2">
+                <li className="hover:text-amber-600 hover:underline cursor-pointer transition-colors duration-200">
+                  {item.name}
+                </li>
+                <img
+                  src={item.icon}
+                  className="h-10 rounded-lg hover:scale-125 transition-transform duration-200"
+                  alt={`${item.name} icon`}
+                />
+              </div>
+            ))}
           </ul>
         </div>
 
