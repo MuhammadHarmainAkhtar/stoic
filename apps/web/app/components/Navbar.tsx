@@ -39,21 +39,40 @@ const Navbar = () => {
         {/* Navigation Menu - Center */}
         <div className="flex-grow flex justify-center mt-4 z-10 mx-0">
           <ul className="flex space-x-10 text-amber-900 font-semibold text-base">
+            <div className="flex items-center gap-2">
             <li className="hover:text-amber-600 hover:underline cursor-pointer transition-colors duration-200">
               Home
             </li>
+            <img src="/HomeIcon.png" className="h-10 rounded-lg" alt="" />
+            </div>
+
+            <div className="flex items-center gap-2">
             <li className="hover:text-amber-600 hover:underline cursor-pointer transition-colors duration-200">
               SageBot
             </li>
+            <img src="/SageBot.png" className="h-10 rounded-lg" alt="" />
+            </div>
+
+            <div className="flex items-center gap-2">
             <li className="hover:text-amber-600 hover:underline cursor-pointer transition-colors duration-200">
               Tribe
             </li>
+            <img src="/Tribe.png" className="h-10 rounded-lg" alt="" />
+            </div>
+
+            <div className="flex items-center gap-2">
             <li className="hover:text-amber-600 hover:underline cursor-pointer transition-colors duration-200">
               Profile
             </li>
+            <img src="/Profile.png" className="h-10 rounded-lg" alt="" />
+            </div>
+            
+            <div className="flex items-center gap-2">
             <li className="hover:text-amber-600 hover:underline cursor-pointer transition-colors duration-200">
               Settings
             </li>
+            <img src="/settingsIcon.png" className="h-10 rounded-lg" alt="" />
+            </div>
           </ul>
         </div>
 
