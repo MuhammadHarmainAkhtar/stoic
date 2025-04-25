@@ -1,11 +1,14 @@
-import React from 'react'
+import React from "react";
+import Hero from "./components/Hero";
+import Navbar from "./components/Navbar";
 
 const page = () => {
   return (
-    <div>
-      Mochiii sybasdasdasd
-    </div>
-  )
-}
+    <>
+      <Navbar  />
+      <Hero />
+    </>
+  );
+};
 
-export default page
+export default page;
