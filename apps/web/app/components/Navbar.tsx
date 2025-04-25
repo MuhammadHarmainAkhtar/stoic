@@ -1,13 +1,15 @@
 "use client";
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
+import VintageButtons from "./vintage-button";
 
 const navItems = [
-  { name: "Home", icon: "/HomeIcon.png" },
-  { name: "SageBot", icon: "/SageBot.png" },
-  { name: "Tribe", icon: "/Tribe.png" },
-  { name: "Profile", icon: "/Profile.png" },
-  { name: "Settings", icon: "/settingsIcon.png" },
+  { name: "home", icon: "/HomeIcon.png" },
+  { name: "sage bot", icon: "/SageBot.png" },
+  { name: "tribe", icon: "/Tribe.png" },
+  { name: "profile", icon: "/Profile.png" },
+  { name: "settings", icon: "/settingsIcon.png" },
 ];
 
 const Navbar = () => {
@@ -48,13 +50,15 @@ const Navbar = () => {
           <ul className="flex space-x-10 text-amber-900 font-semibold text-base">
             {navItems.map((item) => (
               <div key={item.name} className="flex items-center gap-2">
-                <li className="hover:text-amber-600 hover:underline cursor-pointer transition-colors duration-200">
+                <li className="text-xl text-black hover:text-amber-600 cursor-pointer transition-colors duration-200 font-[bruneyfont]">
                   {item.name}
                 </li>
-                <img
+                <Image
                   src={item.icon}
                   className="h-10 rounded-lg hover:scale-125 transition-transform duration-200"
                   alt={`${item.name} icon`}
+                  height={40}
+                  width={40}
                 />
               </div>
             ))}
@@ -63,12 +67,16 @@ const Navbar = () => {
 
         {/* Auth Buttons - Right */}
         <div className="mt-4 flex-shrink-0 flex items-center space-x-1 z-10 ml-1">
-          <button className="px-2 py-1 text-amber-900 hover:text-amber-600 font-medium transition-colors duration-200">
+          <Link
+            href={"#"}
+            className="text-black px-2 hover:text-amber-600 font-medium transition-colors duration-200"
+          >
             Login
-          </button>
-          <button className="px-2 py-1 bg-amber-800 text-white rounded-md hover:bg-amber-700 transition-colors duration-200">
-            Signup
-          </button>
+          </Link>
+          <VintageButtons
+            className="text-black transition-colors"
+            name="Signup"
+          />
         </div>
       </div>
     </nav>
