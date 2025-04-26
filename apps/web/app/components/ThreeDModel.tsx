@@ -1,28 +1,25 @@
 "use client";
 
-import { Canvas, useFrame } from "@react-three/fiber";
-import { useLoader } from "@react-three/fiber";
+import React, { Suspense, useRef, useEffect } from "react";
+import { Canvas, useFrame, useLoader } from "@react-three/fiber";
 import { FBXLoader } from "three-stdlib";
-import { Suspense, useRef, useEffect } from "react";
 import { OrbitControls, Center, PerspectiveCamera } from "@react-three/drei";
 import type { Group } from "three";
 
 const Model = () => {
   const fbx = useLoader(FBXLoader, "/Stoic3D.fbx");
   const modelRef = useRef<Group | null>(null);
-  
+
   useEffect(() => {
     if (modelRef.current) {
-      // Reset position and apply proper scale
-      modelRef.current.position.set(0, 0, 0);
+      modelRef.current.position.set(-1, 0, 0); // Moved 1 unit to the left
       modelRef.current.rotation.set(0, 0, 0);
     }
   }, [fbx]);
 
-  // Optional: animate model rotation
   useFrame(() => {
     if (modelRef.current) {
-      modelRef.current.rotation.y += 0.002;
+      modelRef.current.rotation.y += 0.001;
     }
   });
 
@@ -31,8 +28,8 @@ const Model = () => {
       <primitive
         ref={modelRef}
         object={fbx}
-        scale={0.04} // Reduced scale slightly
-        position={[0, -0.5, 0]} // Adjusted to be more visible
+        scale={0.032} // Slightly reduced scale
+        position={[0, -0.5, 0]} // Adjusted Y position up a bit
       />
     </Center>
   );
@@ -40,36 +37,46 @@ const Model = () => {
 
 export default function ThreeDModel() {
   return (
-    <div className="w-full h-screen max-h-screen">
+    <div className="w-full h-full">
       <Canvas
         shadows
-        className="w-full h-full border border-gray-300 rounded-md"
+        className="w-full h-full rounded-xl"
+        camera={{ position: [0, 0, 8], fov: 50 }} // Adjusted camera position and FOV
       >
-        {/* Custom camera with adjusted position */}
-        <PerspectiveCamera makeDefault position={[0, 1, 8]} fov={60} />
-        
-        <ambientLight intensity={0.8} />
-        <directionalLight position={[10, 10, 5]} intensity={1} castShadow />
-        <directionalLight position={[-10, -10, -5]} intensity={0.5} />
-        
+        {/* Enhanced lighting setup */}
+        <ambientLight intensity={0.5} />
+        <directionalLight
+          position={[5, 5, 5]}
+          intensity={0.8}
+          castShadow
+          shadow-mapSize={[1024, 1024]}
+        />
+        <directionalLight position={[-5, -5, -5]} intensity={0.4} />
+        <spotLight
+          position={[0, 5, 0]}
+          intensity={0.3}
+          penumbra={1}
+          angle={0.5}
+        />
+
         <Suspense fallback={<LoadingFallback />}>
           <Model />
         </Suspense>
-        
+
         <OrbitControls
-          enablePan={true}
+          enablePan={false}
           enableZoom={true}
           enableRotate={true}
-          minDistance={2}
-          maxDistance={20}
-          target={[0, 0, 0]} // Focus on center
+          minDistance={4}
+          maxDistance={12}
+          target={[0, 0, 0]} // Centered target
+          dampingFactor={0.05}
         />
       </Canvas>
     </div>
   );
 }
 
-// Simple loading fallback
 const LoadingFallback = () => {
   return (
     <mesh position={[0, 0, 0]}>
@@ -77,4 +84,4 @@ const LoadingFallback = () => {
       <meshStandardMaterial color="gray" wireframe />
     </mesh>
   );
-}
+};
