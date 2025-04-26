@@ -49,7 +49,7 @@ const Navbar = () => {
             alt="Nav Logo"
             height={70}
             width={70}
-            className="z-10 rounded-full"
+            className="z-10 rounded-xl"
           />
         </div>
 
