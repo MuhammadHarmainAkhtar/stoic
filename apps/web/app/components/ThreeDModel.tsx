@@ -12,7 +12,7 @@ const Model = () => {
 
   useEffect(() => {
     if (modelRef.current) {
-      modelRef.current.position.set(-1, 0, 0); // Moved 1 unit to the left
+      modelRef.current.position.set(0, -1, 0);
       modelRef.current.rotation.set(0, 0, 0);
     }
   }, [fbx]);
@@ -28,8 +28,8 @@ const Model = () => {
       <primitive
         ref={modelRef}
         object={fbx}
-        scale={0.032} // Slightly reduced scale
-        position={[0, -0.5, 0]} // Adjusted Y position up a bit
+        scale={0.028}
+        position={[0, -1, 0]}
       />
     </Center>
   );
@@ -40,8 +40,8 @@ export default function ThreeDModel() {
     <div className="w-full h-full">
       <Canvas
         shadows
-        className="w-full h-full rounded-xl"
-        camera={{ position: [0, 0, 8], fov: 50 }} // Adjusted camera position and FOV
+        className="w-full h-full"
+        camera={{ position: [0, 2, 8], fov: 50 }}
       >
         {/* Enhanced lighting setup */}
         <ambientLight intensity={0.5} />
@@ -52,12 +52,6 @@ export default function ThreeDModel() {
           shadow-mapSize={[1024, 1024]}
         />
         <directionalLight position={[-5, -5, -5]} intensity={0.4} />
-        <spotLight
-          position={[0, 5, 0]}
-          intensity={0.3}
-          penumbra={1}
-          angle={0.5}
-        />
 
         <Suspense fallback={<LoadingFallback />}>
           <Model />
@@ -67,9 +61,11 @@ export default function ThreeDModel() {
           enablePan={false}
           enableZoom={true}
           enableRotate={true}
+          minPolarAngle={Math.PI / 4}
+          maxPolarAngle={Math.PI / 1.5}
           minDistance={4}
           maxDistance={12}
-          target={[0, 0, 0]} // Centered target
+          target={[0, 0, 0]}
           dampingFactor={0.05}
         />
       </Canvas>
