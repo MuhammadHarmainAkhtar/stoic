@@ -37,8 +37,8 @@ const Hero = () => {
       </div>
 
       {/* Right Side: 3D Model */}
-      <div className="flex-1 justify-center items-center h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] w-full">
-        <div className="w-full h-full max-w-[600px]">
+      <div className="flex-1 flex justify-center items-center w-full mt-8 sm:mt-0">
+        <div className="w-full aspect-[12/16] sm:aspect-[6/8] md:aspect-[5/7] lg:aspect-[4/5]">
           <ThreeDModel />
         </div>
       </div>
