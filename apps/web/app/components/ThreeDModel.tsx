@@ -24,8 +24,8 @@ const Model = () => {
         setModelPosition([0, -1.5, 0]); // lower model
         setCameraPosition([0, 1.8, 10.5]); // zoom out camera more
       } else {
-        setModelScale(0.022); // smaller on desktop too
-        setModelPosition([0, -1.8, 0]); // lower model
+        setModelScale(0.019); // smaller on desktop too
+        setModelPosition([0, 0, 0]); // lower model
         setCameraPosition([0, 2.2, 9.5]); // zoom out camera
       }
     };
