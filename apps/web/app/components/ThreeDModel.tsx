@@ -3,7 +3,7 @@
 import React, { Suspense, useRef, useEffect } from "react";
 import { Canvas, useFrame, useLoader } from "@react-three/fiber";
 import { FBXLoader } from "three-stdlib";
-import { OrbitControls, Center, PerspectiveCamera } from "@react-three/drei";
+import { OrbitControls, Center} from "@react-three/drei";
 import type { Group } from "three";
 
 const Model = () => {
@@ -19,7 +19,7 @@ const Model = () => {
 
   useFrame(() => {
     if (modelRef.current) {
-      modelRef.current.rotation.y += 0.001;
+      modelRef.current.rotation.y += 0.003;
     }
   });
 
