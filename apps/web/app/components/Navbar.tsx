@@ -22,7 +22,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="relative w-full shadow-md">
+    <nav className="relative w-full">
       {/* Background Container with full width */}
       <div
         className="absolute inset-0 bg-no-repeat bg-center"
