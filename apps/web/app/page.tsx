@@ -1,10 +1,13 @@
-'use client'
-import React from "react";
+
+"use client"
+import React, { useState, useEffect } from "react";
 import Hero from "./components/Hero";
 import Navbar from "./components/Navbar";
 import Image from "next/image";
 
 const Page = () => {
+
+
   return (
     <main className="min-h-screen w-full relative">
       {/* Background Image for small screens */}
@@ -29,6 +32,20 @@ const Page = () => {
           className="object-cover"
           quality={100}
         />
+    <main className="min-h-screen w-full relative overflow-hidden">
+      {/* Background Image */}
+      <div className="fixed inset-0 z-0 flex justify-center items-center">
+        <div
+        >
+          <Image
+            src="/stoicbackground.png"
+            alt="Stoic background"
+            fill
+            priority
+            className="object-cover"
+            quality={100}
+          />
+        </div>
       </div>
 
       {/* Content */}
