@@ -40,7 +40,7 @@ export default function ThreeDModel() {
     <div className="w-full h-full">
       <Canvas
         shadows
-        className="w-full h-full"
+        className=""
         camera={{ position: [0, 2, 8], fov: 50 }}
       >
         {/* Enhanced lighting setup */}
