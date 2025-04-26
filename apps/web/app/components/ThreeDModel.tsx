@@ -13,31 +13,22 @@ const Model = () => {
   const [modelPosition, setModelPosition] = React.useState<
     [number, number, number]
   >([0, -1, 0]);
-  const [cameraPosition, setCameraPosition] = React.useState<
-    [number, number, number]
-  >([0, 2, 8]);
 
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
         setModelScale(0.032); // even smaller on mobile
         setModelPosition([0, -1.5, 0]); // lower model
-        setCameraPosition([0, 1.8, 10.5]); // zoom out camera more
       } else {
         setModelScale(0.019); // smaller on desktop too
         setModelPosition([0, 0, 0]); // lower model
-        setCameraPosition([0, 2.2, 9.5]); // zoom out camera
       }
     };
-  
+
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-  
-  
-  
-  
 
   useEffect(() => {
     if (modelRef.current) {
@@ -76,23 +67,22 @@ export default function ThreeDModel() {
       setFov(window.innerWidth < 768 ? 60 : 50);
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return (
     <div className="w-full h-full">
-     <Canvas
-  shadows
-  className="w-full h-full max-h-full"
-  camera={{
-    position: cameraPosition,
-    fov: fov,
-    near: 0.1,
-    far: 1000,
-    
-  }}
->
+      <Canvas
+        shadows
+        className="w-full h-full max-h-full"
+        camera={{
+          position: cameraPosition,
+          fov: fov,
+          near: 0.1,
+          far: 1000,
+        }}
+      >
         {/* Enhanced lighting setup */}
         <ambientLight intensity={0.5} />
         <directionalLight
