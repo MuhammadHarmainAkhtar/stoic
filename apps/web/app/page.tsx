@@ -1,19 +1,16 @@
-
-"use client"
-import React, { useState, useEffect } from "react";
+"use client";
+import React from "react";
 import Hero from "./components/Hero";
 import Navbar from "./components/Navbar";
 import Image from "next/image";
 
 const Page = () => {
-
-
   return (
-    <main className="min-h-screen w-full relative">
+    <main className="min-h-screen w-full relative overflow-hidden">
       {/* Background Image for small screens */}
       <div className="absolute inset-0 w-full h-full z-0 block md:hidden">
         <Image
-          src="/parchedbackground.jpg"
+          src="/bgimg2.jpg"
           alt="Stoic background mobile"
           fill
           priority
@@ -22,30 +19,16 @@ const Page = () => {
         />
       </div>
 
-      {/* Background Image for medium screens and up */}
+      {/* Background Image for medium and larger screens */}
       <div className="absolute inset-0 w-full h-full z-0 hidden md:block">
         <Image
           src="/stoicbackground.png"
-          alt="Stoic background"
+          alt="Stoic background desktop"
           fill
           priority
           className="object-cover"
           quality={100}
         />
-    <main className="min-h-screen w-full relative overflow-hidden">
-      {/* Background Image */}
-      <div className="fixed inset-0 z-0 flex justify-center items-center">
-        <div
-        >
-          <Image
-            src="/stoicbackground.png"
-            alt="Stoic background"
-            fill
-            priority
-            className="object-cover"
-            quality={100}
-          />
-        </div>
       </div>
 
       {/* Content */}
