@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import VintageButtons from "./vintage-button";
@@ -14,11 +14,17 @@ const navItems = [
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
   const handleNavItemClick = (name: string) => {
     setIsMenuOpen(false);
+    console.log(name);
     // Add your navigation logic here if needed
   };
+  if (!isLoaded) return <div>Loading</div>;
 
   return (
     <nav className="relative w-full shadow-md">
