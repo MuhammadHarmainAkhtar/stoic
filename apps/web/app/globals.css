@@ -1,56 +1,46 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;700&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;700&display=swap'); */
 @import "tailwindcss";
-
 
 /* Morris fonts  */
 /* ---------------------------------------------------------------------------------------------  */
 
 @font-face {
-  font-family: 'MorrisRoman';
-  src: url('/fonts/MorrisRoman-Black.ttf') format('truetype');
+  font-family: "MorrisRoman";
+  src: url("/fonts/MorrisRoman-Black.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
 @font-face {
-  font-family: 'Germania';
-  src: url('/fonts/Germania.ttf') format('truetype');
+  font-family: "Germania";
+  src: url("/fonts/Germania.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
 @font-face {
-  font-family: 'Greek-Freak';
-  src: url('/fonts/Greek-Freak.ttf') format('truetype');
+  font-family: "Greek-Freak";
+  src: url("/fonts/Greek-Freak.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
 /* ---------------------------------------------------------------------------------------------  */
 
-
-
 @font-face {
-    font-family: 'bruneyFont';
-    src: url('/fonts/ss-bruney.otf') format('opentype');
-    font-weight: normal;
-    font-style: normal;
-  }
-  /* BOLDER */
-  @font-face {
-    font-family: 'bruneyBold';
-    src: url('/fonts/Bruney.otf') format('opentype');
-    font-weight: normal;
-    font-style: normal;
-  }
-  
+  font-family: "bruneyFont";
+  src: url("/fonts/ss-bruney.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+}
+/* BOLDER */
+@font-face {
+  font-family: "bruneyBold";
+  src: url("/fonts/Bruney.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+}
 
 body {
-    width: 100%;
-    height: 100vh;
-    background-image: url('/stoicbackground.png');
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    margin: 0;
-    padding: 0;
+  margin: 0;
+  padding: 0;
 }
 
 @layer utilities {
