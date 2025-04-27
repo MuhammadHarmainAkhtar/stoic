@@ -1,24 +1,61 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import mongoose, { Document, Schema } from 'mongoose';
+import bcrypt from 'bcryptjs';
 
-interface AuthRequest extends Request {
-  user?: { userId: string; email: string };  // Decoded user data
+// Define the User interface extending Mongoose Document
+interface IUser extends Document {
+  username: string;
+  email: string;
+  password: string;
+  comparePassword: (password: string) => Promise<boolean>;
 }
 
-const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-
-  if (!token) {
-    return res.status(401).json({ message: 'No token, authorization denied' });
+// Create User schema
+const UserSchema: Schema = new Schema(
+  {
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+      match: [/\S+@\S+\.\S+/, 'is invalid'],
+    },
+    password: {
+      type: String,
+      required: true,
+      minlength: 6,
+    },
+  },
+  {
+    timestamps: true,
   }
+);
+
+// Pre-save hook to hash the password before saving
+UserSchema.pre<IUser>('save', async function (next) {
+  if (!this.isModified('password')) return next();
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_secret_key') as { userId: string; email: string };
-    req.user = decoded;  // Attach user data to request object
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
     next();
-  } catch (err) {
-    return res.status(401).json({ message: 'Token is not valid' });
+  } catch (error: any) {
+    next(error);
   }
+});
+
+// Method to compare passwords during login
+UserSchema.methods.comparePassword = async function (password: string) {
+  return await bcrypt.compare(password, this.password);
 };
 
-export default authMiddleware;
+// Create the model
+const User = mongoose.model<IUser>('User', UserSchema);
+
+export default User;
