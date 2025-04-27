@@ -1,30 +1,37 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import connectMongo from './lib/mongoose'; // Importing MongoDB connection
-import authRoutes from './routes/authRoutes'; // Example auth routes
-import userRoutes from './routes/userRoutes'; // Example user routes (you will define these later)
+import connectMongo from './lib/mongoose';
+import authRoutes from './routes/authRoutes';
+import userRoutes from './routes/userRoutes';
+
 
 const app = express();
 
 // Middleware
-app.use(cors()); // Enable Cross-Origin Resource Sharing
-app.use(express.json()); // Parse incoming JSON requests
+app.use(cors());
+app.use(express.json());
 
-// Connect to MongoDB (this ensures the DB is connected when the app starts)
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+
+// PORT
+const PORT = process.env.PORT || 5000;
+
+// Connect to MongoDB first, then start server
 connectMongo()
   .then(() => {
     console.log('Connected to MongoDB');
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
   })
   .catch((err) => {
     console.error('Failed to connect to MongoDB', err);
+    process.exit(1); // Exit the app if DB connection fails
   });
 
-// Routes
-app.use('/api/auth', authRoutes); // Auth routes
-app.use('/api/users', userRoutes); // User routes (you'll create these)
-
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    console.error(err);
+    res.status(500).json({ message: 'Internal Server Error' });
+  });
