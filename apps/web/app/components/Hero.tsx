@@ -4,7 +4,7 @@ import VintageButtons from "./vintage-button";
 
 const Hero = () => {
   return (
-    <div className="relative min-h-screen overflow-hidden flex flex-col md:flex-row items-start justify-center px-4 sm:px-6 md:px-16 pt-6 sm:pt-8 md:pt-8">
+    <section id="home" className="relative min-h-screen overflow-hidden flex flex-col md:flex-row items-start justify-center px-4 sm:px-6 md:px-16 pt-6 sm:pt-8 md:pt-8">
       {/* Left Side: Text and Buttons */}
       <div className="z-10 flex-1 flex flex-col items-center text-center space-y-4 sm:space-y-6 md:space-y-8 mt-4 sm:mt-6 md:mt-8">
         <div className="space-y-4 sm:space-y-6 max-w-2xl lg:ml-10">
@@ -42,7 +42,7 @@ const Hero = () => {
           <ThreeDModel />
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 
