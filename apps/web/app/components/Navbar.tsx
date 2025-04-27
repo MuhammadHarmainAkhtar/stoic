@@ -44,13 +44,14 @@ const Navbar = () => {
       >
         {/* Logo Section - Left */}
         <div className="mt-4 flex-shrink-0 z-10 mr-1">
+          <Link href="#home">
           <Image
             src="/navImage.jpg"
             alt="Nav Logo"
             height={70}
             width={70}
-            className="z-10 rounded-xl"
-          />
+            className="z-10 rounded-xl cursor-pointer"
+          /></Link>
         </div>
 
         {/* Hamburger Menu Button - Mobile Only */}
