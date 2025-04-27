@@ -3,57 +3,73 @@ import dotenv from 'dotenv';
 
 dotenv.config(); // Load environment variables from .env.local
 
-// Create a Nodemailer transporter using Gmail
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER, // your Gmail email address
-    pass: process.env.GMAIL_PASS, // your Gmail app password
-  },
-});
+// Create a test account using Ethereal for development
+// For production, you should use real SMTP credentials
+const createTestAccount = async () => {
+  const testAccount = await nodemailer.createTestAccount();
+  return nodemailer.createTransport({
+    host: 'smtp.ethereal.email',
+    port: 587,
+    secure: false,
+    auth: {
+      user: testAccount.user,
+      pass: testAccount.pass,
+    },
+  });
+};
 
-// Define the email sending function
-const sendVerificationEmail = async (recipientEmail: string, verificationCode: string) => {
-  try {
-    const mailOptions = {
-      from: process.env.GMAIL_USER, // Sender address
-      to: recipientEmail,           // Recipient address
-      subject: 'Hey Stoic, Here is Your Login Verification Code', // Subject line
-      html: `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="UTF-8">
-            <title>Your Login Verification Code</title>
-          </head>
-          <body style="font-family: Arial, sans-serif; color: #333; background-color: #f7f7f7; padding: 20px;">
-            <table style="width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
-              <tr>
-                <td>
-                  <h2 style="text-align: center; color: #333;">Login Verification</h2>
-                  <p style="font-size: 16px; line-height: 1.5;">Hello,</p>
-                  <p style="font-size: 16px; line-height: 1.5;">Please use the following code to complete your login process:</p>
-                  <p style="font-size: 24px; font-weight: bold; text-align: center; padding: 10px; background-color: #e9ecef; border-radius: 6px;">
-                    <strong>${verificationCode}</strong>
-                  </p>
-                  <p style="font-size: 16px; line-height: 1.5;">If you did not request this login, please ignore this email or contact support immediately.</p>
-                  <p style="font-size: 14px; color: #666; text-align: center;">
-                    <small>If you are having trouble receiving this email, check your spam folder.</small>
-                  </p>
-                </td>
-              </tr>
-            </table>
-          </body>
-        </html>
-      `,
-    };
-
-    // Send the email
-    await transporter.sendMail(mailOptions);
-    console.log('Verification email sent successfully!');
-  } catch (error) {
-    console.error('Error sending email:', error);
+// Initialize transporter
+let transporter: nodemailer.Transporter;
+const initializeTransporter = async () => {
+  if (process.env.NODE_ENV === 'production') {
+    // Use your production SMTP configuration
+    transporter = nodemailer.createTransport({
+      // Configure your production SMTP settings here
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+  } else {
+    // Use Ethereal for development
+    transporter = await createTestAccount();
   }
 };
 
-export { sendVerificationEmail };
+// Send verification email
+export const sendVerificationEmail = async (email: string, code: string) => {
+  if (!transporter) {
+    await initializeTransporter();
+  }
+
+  const mailOptions = {
+    from: '"Stoic Tribe" <noreply@stoictribe.com>',
+    to: email,
+    subject: 'Verify Your Email - Stoic Tribe',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2A1A0D;">Welcome to Stoic Tribe</h2>
+        <p>Thank you for joining our community. To complete your registration, please use the following verification code:</p>
+        <div style="background-color: #f8f0d9; padding: 20px; text-align: center; border-radius: 5px; margin: 20px 0;">
+          <h1 style="color: #2A1A0D; font-size: 32px; letter-spacing: 5px;">${code}</h1>
+        </div>
+        <p>This code will expire in 30 minutes.</p>
+        <p>If you didn't request this verification, please ignore this email.</p>
+        <hr style="border-top: 1px solid #2A1A0D; margin: 20px 0;">
+        <p style="color: #666; font-size: 12px;">Stoic Tribe - Embrace the Ancient Spirit</p>
+      </div>
+    `,
+  };
+
+  const info = await transporter.sendMail(mailOptions);
+
+  if (process.env.NODE_ENV !== 'production') {
+    // Log preview URL in development (Ethereal)
+    console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+  }
+
+  return info;
+};
