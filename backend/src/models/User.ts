@@ -1,70 +1,24 @@
-import mongoose, { Document, Schema } from "mongoose";
-import bcrypt from "bcryptjs";
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 
-// Define the User interface extending Mongoose Document
-interface IUser extends Document {
-  _id: mongoose.Types.ObjectId;
-  username: string;
-  email: string;
-  password: string;
-  isVerified: boolean;
-  verificationCode?: string; // Make verificationCode optional
-  verificationCodeExpires?: Date; // Make verificationCodeExpires optional
-  comparePassword: (password: string) => Promise<boolean>;
+interface AuthRequest extends Request {
+  user?: { userId: string; email: string };  // Decoded user data
 }
 
-// Create User schema
-const UserSchema: Schema = new Schema(
-  {
-    username: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      match: [/\S+@\S+\.\S+/, "is invalid"],
-    },
-    password: {
-      type: String,
-      required: true,
-    },
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
-    verificationCode: {
-      type: String,
-      required: false,
-    },
-    verificationCodeExpires: {
-      type: Date,
-      required: false,
-    },
-  },
-  {
-    timestamps: true,
+const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
+  const token = req.header('Authorization')?.replace('Bearer ', '');
+
+  if (!token) {
+    return res.status(401).json({ message: 'No token, authorization denied' });
   }
-);
 
-// Pre-save hook to hash the password before saving
-UserSchema.pre<IUser>("save", async function (next) {
-  if (!this.isModified("password")) return next();
-
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-
-  next();
-});
-
-// Method to compare passwords during login
-UserSchema.methods.comparePassword = async function (password: string) {
-  return await bcrypt.compare(password, this.password);
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_secret_key') as { userId: string; email: string };
+    req.user = decoded;  // Attach user data to request object
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: 'Token is not valid' });
+  }
 };
 
-// Create the model
-const User = mongoose.model<IUser>("User", UserSchema);
-
-export default User;
+export default authMiddleware;
