@@ -32,7 +32,7 @@ export default function SignupForm() {
     e.preventDefault();
 
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -102,7 +102,7 @@ export default function SignupForm() {
             />
           </div>
 
-          <div className="ml-16 lg:ml-32">
+          <div className="flex justify-center lg:justify-start lg:ml-32">
             <VintageButtons
               type="submit"
               name="Sign Up"
