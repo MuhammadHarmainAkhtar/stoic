@@ -1,8 +1,9 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 // Define the User interface extending Mongoose Document
 interface IUser extends Document {
+  _id: Types.ObjectId;
   username: string;
   email: string;
   password: string;

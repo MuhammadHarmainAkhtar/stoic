@@ -89,7 +89,7 @@ const Navbar = () => {
         {/* Auth Buttons - Desktop */}
         <div className="hidden lg:flex mt-4 flex-shrink-0 items-center space-x-1 z-10 ml-1">
           <Link
-            href={"#"}
+            href={"/login"}
             className="text-black px-2 hover:text-amber-600 font-medium transition-colors duration-200"
           >
             Login
@@ -97,6 +97,7 @@ const Navbar = () => {
           <VintageButtons
             className="text-black transition-colors"
             name="Signup"
+            href="/signup"
           />
         </div>
 
@@ -149,7 +150,7 @@ const Navbar = () => {
               </ul>
               <div className="mt-8 space-y-4">
                 <Link
-                  href={"#"}
+                  href={"/login"}
                   className="block text-black px-2 hover:text-amber-600 font-medium transition-colors duration-200"
                 >
                   Login
@@ -157,6 +158,7 @@ const Navbar = () => {
                 <VintageButtons
                   className="text-black transition-colors w-full"
                   name="Signup"
+                  href="/signup"
                 />
               </div>
             </div>

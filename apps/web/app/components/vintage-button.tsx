@@ -5,16 +5,17 @@ import Link from "next/link";
 interface Props {
   name: string;
   className: string;
+  href:string;
 }
 
-export default function VintageButtons({ className ,name }: Props) {
+export default function VintageButtons({ className ,name , href}: Props) {
   const [hoverButton, setHoverButton] = useState(false);
 
   return (
     <>
       <div className="flex">
         <Link
-          href="#get-started"
+          href={href}
           className="max-w-xs transition-transform duration-200 font-bold font-[bruneyfont]"
           onMouseEnter={() => setHoverButton(true)}
           onMouseLeave={() => setHoverButton(false)}

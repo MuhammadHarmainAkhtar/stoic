@@ -28,10 +28,12 @@ const Hero = () => {
           <VintageButtons
             name="Purpose"
             className="text-black p-6 sm:p-8 md:p-10"
+            href="/purpose"
           />
           <VintageButtons
             name="Get Started"
             className="text-black p-6 sm:p-8 md:p-9"
+            href="/getstarted"
           />
         </div>
       </div>
