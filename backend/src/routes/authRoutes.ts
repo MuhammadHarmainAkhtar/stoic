@@ -1,44 +1,35 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { sendVerificationCode, verifyCode } from '../controllers/authController';
+import { 
+  login, 
+  register, 
+  verifyCode, 
+  resendVerificationCode 
+} from '../controllers/authController';
+import authMiddleware, { AuthRequest } from '../middleware/authMiddleware';
 
+// Create the router
 const router = Router();
 
-// Example POST route for authentication (login)
-router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    // Handle login logic here
-    res.json({ message: 'Login successful!' });
-  } catch (error) {
-    next(error); // Pass errors to error handling middleware
-  }
+// Authentication routes
+router.post('/register', (req: Request, res: Response, next: NextFunction) => {
+  register(req, res).catch(next);
 });
 
-// Example POST route for user registration
-router.post('/register', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    // Handle user registration logic here
-    res.json({ message: 'Registration successful!' });
-  } catch (error) {
-    next(error);
-  }
+router.post('/login', (req: Request, res: Response, next: NextFunction) => {
+  login(req, res).catch(next);
 });
 
-// Route to send verification code to user's email
-router.post('/send-verification', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    await sendVerificationCode(req, res); // Call the controller function
-  } catch (error) {
-    next(error);
-  }
+router.post('/verify-code', (req: Request, res: Response, next: NextFunction) => {
+  verifyCode(req, res).catch(next);
 });
 
-// Route to verify the code entered by the user
-router.post('/verify-code', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    await verifyCode(req, res); // Call the controller function
-  } catch (error) {
-    next(error);
-  }
+router.post('/resend-verification', (req: Request, res: Response, next: NextFunction) => {
+  resendVerificationCode(req, res).catch(next);
+});
+
+// Protected route using the AuthRequest interface imported from the middleware
+router.get('/protected', authMiddleware, (req: AuthRequest, res: Response) => {
+  res.json({ message: 'This is a protected route', user: req.user });
 });
 
 export default router;

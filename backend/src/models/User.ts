@@ -1,12 +1,13 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 // Define the User interface extending Mongoose Document
 interface IUser extends Document {
+  _id: Types.ObjectId;
   username: string;
   email: string;
   password: string;
-  comparePassword: (password: string) => Promise<boolean>;  // Password comparison method
+  comparePassword: (password: string) => Promise<boolean>;
 }
 
 // Create User schema
@@ -16,36 +17,43 @@ const UserSchema: Schema = new Schema(
       type: String,
       required: true,
       unique: true,
+      trim: true,
     },
     email: {
       type: String,
       required: true,
       unique: true,
+      trim: true,
+      lowercase: true,
       match: [/\S+@\S+\.\S+/, 'is invalid'],
     },
     password: {
       type: String,
       required: true,
+      minlength: 6,
     },
   },
   {
-    timestamps: true, // This will automatically create `createdAt` and `updatedAt` fields
+    timestamps: true,
   }
 );
 
 // Pre-save hook to hash the password before saving
 UserSchema.pre<IUser>('save', async function (next) {
-  if (!this.isModified('password')) return next();  // Only hash if password is modified or new
+  if (!this.isModified('password')) return next();
 
-  const salt = await bcrypt.genSalt(10);  // Generate salt for password hashing
-  this.password = await bcrypt.hash(this.password, salt);  // Hash the password
-
-  next();
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error: any) {
+    next(error);
+  }
 });
 
 // Method to compare passwords during login
 UserSchema.methods.comparePassword = async function (password: string) {
-  return await bcrypt.compare(password, this.password);  // Compare provided password with stored hash
+  return await bcrypt.compare(password, this.password);
 };
 
 // Create the model

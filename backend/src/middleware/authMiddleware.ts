@@ -1,15 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-interface AuthRequest extends Request {
+export interface AuthRequest extends Request {
   user?: { userId: string; email: string };  // Decoded user data
 }
 
-const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
+const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction): void => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
 
   if (!token) {
-    return res.status(401).json({ message: 'No token, authorization denied' });
+    res.status(401).json({ message: 'No token, authorization denied' });
+    return;
   }
 
   try {
@@ -17,7 +18,7 @@ const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => 
     req.user = decoded;  // Attach user data to request object
     next();
   } catch (err) {
-    return res.status(401).json({ message: 'Token is not valid' });
+    res.status(401).json({ message: 'Token is not valid' });
   }
 };
 
