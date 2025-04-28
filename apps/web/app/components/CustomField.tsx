@@ -13,7 +13,7 @@ export default function VintageInput({ className, type, placeholder }: Props) {
 
   return (
     <div className="flex">
-      <div className="relative" style={inputStyles}>
+      <div className="relative left-.9" style={inputStyles}>
         {/* Outer hand-drawn border */}
         <svg
           className="absolute top-0 left-0 w-full h-full"
@@ -35,7 +35,7 @@ export default function VintageInput({ className, type, placeholder }: Props) {
              C298.5,60 298,78 298,78 
              C298,78 270,77.5 240,78 
              C210,78.5 180,77 150,78 
-             C120,79 90,77.5 60,78 
+             C120,79 90,77.5 60,78
              C30,78.5 2,78 2,78 
              L2,50 
              C1.5,50 2.5,40 2,30 
