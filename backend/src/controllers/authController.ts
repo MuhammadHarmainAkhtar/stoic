@@ -48,7 +48,7 @@ export const register = async (req: Request, res: Response) => {
     const verificationCode = crypto.randomInt(100000, 999999).toString();
     
     // Store code with 1-hour expiration
-    const expiration = new Date();
+    const expiration = new Date(new Date().getTime() + 3600000);
     expiration.setHours(expiration.getHours() + 1);
     
     verificationStore[email] = {
