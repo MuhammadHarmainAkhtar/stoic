@@ -97,11 +97,11 @@ export default function AuthForm() {
             />
           </div>
 
-          <div className="ml-16 lg:ml-32">
+          <div className="flex justify-center lg:justify-start lg:ml-32">
             <VintageButtons
               type="submit"
               name="Sign In"
-              className="text-black hover:text-amber-900 transition-colors duration-300 text-xl sm:text-2xl py-3 w-100vw] px-6 rounded-xl font-[bruneyfont]"
+              className="text-black hover:text-amber-900 duration-300 text-xl sm:text-2xl px-6 font-[bruneyfont]"
             />
           </div>
         </form>
