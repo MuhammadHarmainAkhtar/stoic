@@ -99,7 +99,7 @@ export default function AuthForm() {
 
           <div className="ml-16 lg:ml-32">
             <VintageButtons
-              href="submit"
+              type="submit"
               name="Sign In"
               className="text-black hover:text-amber-900 transition-colors duration-300 text-xl sm:text-2xl py-3 w-100vw] px-6 rounded-xl font-[bruneyfont]"
             />

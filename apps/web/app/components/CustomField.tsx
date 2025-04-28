@@ -97,6 +97,7 @@ export default function VintageInput({ className, type, placeholder }: Props) {
               type={type}
               placeholder={placeholder}
               className={`${className} w-full p-2 focus:outline-none`} // Remove focus border
+              required
             />
           )}
         </div>
