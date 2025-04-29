@@ -1,9 +1,11 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import connectMongo from './lib/mongoose';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 import dotenv from 'dotenv';
+const cookieParser = require('cookie-parser');
 
 // Load environment variables
 dotenv.config({ path: '.env.local' });
@@ -21,7 +23,10 @@ console.log('------------------------------------');
 
 // Middleware
 app.use(cors());
+app.use(helmet())
+app.use(cookieParser());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/auth', authRoutes);
