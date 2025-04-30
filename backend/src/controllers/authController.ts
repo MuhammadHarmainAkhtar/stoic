@@ -4,6 +4,8 @@ import {
   schemaSignup,
   schemaLogin,
   schemaAcceptToken,
+  changePasswordSchema,
+  acceptFPCodeSchema,
 } from "../middleware/validator";
 import jwt from "jsonwebtoken";
 import * as crypto from "crypto";
@@ -228,5 +230,142 @@ export const verifyVerificationToken = async (req: any, res: any) => {
       success: false,
       message: "Internal server error",
     });
+  }
+};
+
+export const changePassword = async (req: any, res: any) => {
+  const { userId, verified } = req.user;
+  const { oldPassword, newPassword } = req.body;
+  try {
+    const { error, value } = changePasswordSchema.validate({
+      oldPassword,
+      newPassword,
+    });
+    if (error) {
+      return res
+        .status(401)
+        .json({ success: false, message: error.details[0].message });
+    }
+    if (!verified) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User not verified" });
+    }
+    const user = await User.findOne({ _id: userId }).select("+password");
+    if (!user) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User does not exists" });
+    }
+    const result = await doHashValidation(oldPassword, user.password);
+    if (!result) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid credentials!" });
+    }
+    const hashedPassword = await doHash(newPassword, 12);
+    user.password = hashedPassword;
+    await user.save();
+    return res
+      .status(200)
+      .json({ success: true, message: "Password updated!" });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const sendForgotPasswordToken = async (req: any, res: any) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User does not exists!" });
+    }
+
+    const token = crypto.randomBytes(3).toString("hex");
+    let info = await transport.sendMail({
+      from: process.env.GMAIL_USER,
+      to: user.email,
+      subject: "Forgot password token",
+      html: "<h1>" + token + "</h1>",
+    });
+
+    if (info.accepted[0] === user.email) {
+      const hashedCodeValue = hmacProcess(
+        token,
+        process.env.HMAC_VERIFICATION_KEY || "hMac_verification_#token"
+      );
+      user.forgotPasswordToken = hashedCodeValue;
+      user.forgotPasswordTokenValidation = Date.now();
+      await user.save();
+      return res.status(200).json({ success: true, message: "Token sent!" });
+    }
+    res
+      .status(400)
+      .json({ success: false, message: "There was problem sending the token" });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const verifyForgotPasswordToken = async (req: any, res: any) => {
+  const { email, providedToken, newPassword } = req.body;
+  try {
+    const { error, value } = acceptFPCodeSchema.validate({
+      email,
+      providedToken,
+      newPassword,
+    });
+    if (error) {
+      return res
+        .status(401)
+        .json({ success: false, message: error.details[0].message });
+    }
+
+    const token = providedToken.toString();
+    const user = await User.findOne({ email }).select(
+      "+forgotPasswordToken +forgotPasswordTokenValidation"
+    );
+
+    if (!user) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User does not exists!" });
+    }
+
+    if (!user.forgotPasswordToken || !user.forgotPasswordTokenValidation) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Something went wrong!" });
+    }
+
+    if (Date.now() - user.forgotPasswordTokenValidation > 5 * 60 * 1000) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Token has been expired!" });
+    }
+
+    const hashedCodeValue = hmacProcess(
+      token,
+      process.env.HMAC_VERIFICATION_KEY || "hMac_verification_#token"
+    );
+
+    if (hashedCodeValue === user.forgotPasswordToken) {
+      const hashedPassword = await doHash(newPassword, 12);
+      user.password = hashedPassword;
+      user.forgotPasswordToken = undefined;
+      user.forgotPasswordTokenValidation = undefined;
+      await user.save();
+      return res
+        .status(200)
+        .json({ success: true, message: "Password updated!" });
+    }
+    return res
+      .status(400)
+      .json({ success: false, message: "Unexpected error occured!" });
+  } catch (error) {
+    console.log(error);
   }
 };
