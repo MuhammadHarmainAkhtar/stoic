@@ -136,7 +136,48 @@ export const sendVerificationToken = async (req: any, res: any) => {
       from: process.env.GMAIL_USER,
       to: user.email,
       subject: "Verification Token",
-      html: `<p>Your verification token is: <strong>${verificationToken}</strong></p>`,
+      html: `
+  <div style="background: linear-gradient(to bottom, #d9b77f, #c9a76a); padding: 40px; font-family: 'Georgia', serif; color: #2A1A0D;">
+    <div style="max-width: 600px; margin: auto; background: #f8f2e0; padding: 30px; border: 3px solid #2A1A0D; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); position: relative;">
+      
+      <div style="
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-image: url('data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E');
+        opacity: 0.07;
+        z-index: 0;
+        border-radius: 7px;
+      "></div>
+
+      <div style="position: relative; z-index: 1;">
+        <h1 style="font-size: 28px; text-align: center; margin-bottom: 20px; border-bottom: 2px dashed #2A1A0D; padding-bottom: 10px;">Let's Get You In The Tribe</h1>
+        <p style="font-size: 16px; line-height: 1.6;">Hey <strong>Stoic</strong>,</p>
+        <p style="font-size: 16px; line-height: 1.6;">
+          Welcome to the <strong>TRIBE</strong>. Here is your one-time token. Please use it within the next 5 minutes to verify your account.
+        </p>
+
+        <div style="margin: 30px 0; text-align: center;">
+          <span style="
+            display: inline-block;
+            background: #fff7d6;
+            padding: 15px 25px;
+            font-size: 22px;
+            font-weight: bold;
+            border: 2px dashed #2A1A0D;
+            border-radius: 6px;
+            letter-spacing: 2px;
+          ">
+            ${verificationToken}
+          </span>
+        </div>
+
+        <p>If you did not request this, please ignore this email.</p>
+
+        <p style="margin-top: 30px;">Kind regards,<br/><em>The Stoic Support Team</em></p>
+      </div>
+    </div>
+  </div>
+  `,
     });
 
     if (info.accepted[0] === user.email) {
@@ -289,7 +330,48 @@ export const sendForgotPasswordToken = async (req: any, res: any) => {
       from: process.env.GMAIL_USER,
       to: user.email,
       subject: "Forgot password token",
-      html: "<h1>" + token + "</h1>",
+      html: `
+  <div style="background: linear-gradient(to bottom, #d9b77f, #c9a76a); padding: 40px; font-family: 'Georgia', serif; color: #2A1A0D;">
+    <div style="max-width: 600px; margin: auto; background: #f8f2e0; padding: 30px; border: 3px solid #2A1A0D; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); position: relative;">
+      
+      <div style="
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-image: url('data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E');
+        opacity: 0.07;
+        z-index: 0;
+        border-radius: 7px;
+      "></div>
+
+      <div style="position: relative; z-index: 1;">
+        <h1 style="font-size: 28px; text-align: center; margin-bottom: 20px; border-bottom: 2px dashed #2A1A0D; padding-bottom: 10px;">Forgot Your Password?</h1>
+        <p style="font-size: 16px; line-height: 1.6;">Hey <strong>Stoic</strong>,</p>
+        <p style="font-size: 16px; line-height: 1.6;">
+          We've received a request to reset your password. Below is your one-time token. Please use it within the next 5 minutes.
+        </p>
+
+        <div style="margin: 30px 0; text-align: center;">
+          <span style="
+            display: inline-block;
+            background: #fff7d6;
+            padding: 15px 25px;
+            font-size: 22px;
+            font-weight: bold;
+            border: 2px dashed #2A1A0D;
+            border-radius: 6px;
+            letter-spacing: 2px;
+          ">
+            ${token}
+          </span>
+        </div>
+
+        <p>If you did not request this, please ignore this email.</p>
+
+        <p style="margin-top: 30px;">Kind regards,<br/><em>The Stoic Support Team</em></p>
+      </div>
+    </div>
+  </div>
+  `,
     });
 
     if (info.accepted[0] === user.email) {
