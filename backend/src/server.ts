@@ -1,58 +1,40 @@
-import express, { Request, Response, NextFunction } from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import connectMongo from './lib/mongoose';
-import authRoutes from './routes/authRoutes';
-import userRoutes from './routes/userRoutes';
-import dotenv from 'dotenv';
-const cookieParser = require('cookie-parser');
+import express from "express";
+import helmet from "helmet";
+import cors from "cors";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import router from "./routes/authRoutes";
+const cookieParser = require("cookie-parser");
 
 // Load environment variables
-dotenv.config({ path: '.env.local' });
+dotenv.config({ path: ".env.local" });
+const PORT =  process.env.PORT
 
-// Create Express app
 const app = express();
-
-// Output important environment variables for debugging (remove in production)
-console.log('--------- Environment Check ---------');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('MongoDB URI configured:', process.env.MONGODB_URI ? 'Yes' : 'No');
-console.log('JWT Secret configured:', process.env.JWT_SECRET ? 'Yes' : 'No');
-console.log('Email credentials configured:', process.env.GMAIL_USER ? 'Yes' : 'No');
-console.log('------------------------------------');
-
-// Middleware
 app.use(cors());
-app.use(helmet())
+app.use(helmet());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-
-// Global error handler
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error('SERVER ERROR:', err.stack);
-  res.status(500).json({ 
-    message: 'Internal Server Error',
-    error: process.env.NODE_ENV !== 'production' ? err.message : undefined
-  });
+if (!process.env.MONGODB_URI) {
+  throw new Error("MONGODB_URI is not defined in environment variables");
+}
+mongoose.connect(process.env.MONGODB_URI).then(() => {
+  console.log("Connected to MongoDB");
+}).catch((err) => {
+  console.error("Failed to connect to MongoDB", err);
+  process.exit(1); // Exit the app if DB connection fails
 });
 
-// PORT
-const PORT = process.env.PORT || 5000;
+app.use("/api/auth", router);
 
-// Connect to MongoDB first, then start server
-connectMongo()
-  .then(() => {
-    console.log('Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error('Failed to connect to MongoDB', err);
-    process.exit(1); // Exit the app if DB connection fails
-  });
+app.get("/", (req, res) => {
+  res.send("Hello, World!");
+}
+);
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+}
+);
