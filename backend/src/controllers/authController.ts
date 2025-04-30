@@ -1,232 +1,371 @@
-import { Request, Response } from 'express';
-import crypto from 'crypto';
-import jwt from 'jsonwebtoken';
-import User from '../models/User';
-import { sendVerificationEmail } from '../services/emailService';
+const User = require("../models/userModel");
+import { doHash, doHashValidation, hmacProcess } from "../lib/hashing";
+import {
+  schemaSignup,
+  schemaLogin,
+  schemaAcceptToken,
+  changePasswordSchema,
+  acceptFPCodeSchema,
+} from "../middleware/validator";
+import jwt from "jsonwebtoken";
+import * as crypto from "crypto";
+import { transport } from "../services/sendEmail";
 
-// Interface for verification code storage with expiration
-interface VerificationData {
-  code: string;
-  email: string;
-  expires: Date;
-}
-
-// Store for verification codes (in production, use Redis or database)
-const verificationStore: Record<string, VerificationData> = {};
-
-// Function to register a new user
-export const register = async (req: Request, res: Response) => {
+export const signup = async (req: any, res: any) => {
   const { username, email, password } = req.body;
-
-  if (!username || !email || !password) {
-    return res.status(400).json({ message: 'Username, email and password are required' });
-  }
-
   try {
-    // Check if user already exists
-    const existingUser = await User.findOne({ 
-      $or: [
-        { email: email },
-        { username: username }
-      ] 
+    const { error, value } = await schemaSignup.validateAsync({
+      username,
+      email,
+      password,
     });
-
-    if (existingUser) {
-      return res.status(400).json({ 
-        message: 'User already exists with this email or username' 
+    if (error) {
+      return res.status(401).json({
+        success: false,
+        message: error.details[0].message,
       });
     }
 
-    // Create new user
+    const existingUser = await User.findOne({ username, email });
+    if (existingUser) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User already exists" });
+    }
+    const hashedPassword = await doHash(password, 12);
+
     const newUser = new User({
       username,
       email,
-      password
+      password: hashedPassword,
     });
-
-    // Generate verification code
-    const verificationCode = crypto.randomInt(100000, 999999).toString();
-    
-    // Store code with 1-hour expiration
-    const expiration = new Date(new Date().getTime() + 3600000);
-    expiration.setHours(expiration.getHours() + 1);
-    
-    verificationStore[email] = {
-      code: verificationCode,
-      email: email,
-      expires: expiration
-    };
-
-    // Save the user to database
-    await newUser.save();
-    
-    // Try to send verification code to email
-    try {
-      await sendVerificationEmail(email, verificationCode);
-      console.log('Verification email sent to:', email);
-    } catch (emailError) {
-      console.error('Failed to send verification email:', emailError);
-      
-      // For development only - remove in production!
-      if (process.env.NODE_ENV !== 'production') {
-        return res.status(201).json({ 
-          message: 'Registration successful. Please check your email for verification code.',
-          userId: newUser._id,
-          // REMOVE THIS IN PRODUCTION - only for testing when email doesn't work
-          dev_verification_code: verificationCode
-        });
-      }
-    }
-
-    return res.status(201).json({ 
-      message: 'Registration successful. Please check your email for verification code.',
-      userId: newUser._id
-    });
+    const result = await newUser.save();
+    result.password = undefined; // Remove password from the response
+    res
+      .status(201)
+      .json({ success: true, message: "User created successfully", result });
   } catch (error) {
-    console.error('Error in register:', error);
-    return res.status(500).json({ message: 'Error during registration' });
+    console.error("Error in signup:", error);
+    return res.status(500).json({ message: "Error during signup" });
   }
+
+  res.json({ message: "Signup successful" });
 };
-// Function to log in a user
-export const login = async (req: Request, res: Response) => {
+
+export const login = async (req: any, res: any) => {
   const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password are required' });
-  }
-
   try {
-    // Check if user exists
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    // Check if password matches
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: user._id, email: user.email },
-      process.env.JWT_SECRET || 'your_secret_key',
-      { expiresIn: '1d' }
-    );
-
-    return res.status(200).json({
-      message: 'Login successful',
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email
-      }
+    const { error, value } = await schemaLogin.validateAsync({
+      email,
+      password,
     });
+    if (error) {
+      return res.status(401).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+
+    const user = await User.findOne({ email }).select("+password");
+    if (!user) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid credentials" });
+    }
+    const result = await doHashValidation(password, user.password);
+    if (!result) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid credentials" });
+    }
+    const token = jwt.sign(
+      {
+        userId: user._id,
+        email: user.email,
+        verified: user.verified,
+      },
+      process.env.JWT_SECRET || "secret",
+      {
+        expiresIn: "2d",
+      }
+    );
+    console.log("token", token);
+    res
+      .cookie("Authorization", "Bearer" + token, {
+        expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
+        httpOnly: process.env.NODE_ENV === "production",
+        secure: process.env.NODE_ENV === "production", // Set to true in production
+      })
+      .json({
+        success: true,
+        message: "Login successful",
+        token,
+      });
+    res.status(200).json({ success: true, message: "Login successful", user });
   } catch (error) {
-    console.error('Error in login:', error);
-    return res.status(500).json({ message: 'Error during login' });
+    console.error("Error in login:", error);
   }
 };
 
-// Function to verify code and activate user account
-export const verifyCode = async (req: Request, res: Response) => {
-  const { email, verificationCode } = req.body;
-
-  if (!email || !verificationCode) {
-    return res.status(400).json({ message: 'Email and verification code are required' });
-  }
-
-  try {
-    // Check if verification data exists and is valid
-    const verification = verificationStore[email];
-    
-    if (!verification) {
-      return res.status(400).json({ message: 'No verification code found for this email' });
-    }
-    
-    // Check if code has expired
-    if (new Date() > verification.expires) {
-      // Remove expired code
-      delete verificationStore[email];
-      return res.status(400).json({ message: 'Verification code has expired' });
-    }
-    
-    // Check if code matches
-    if (verificationCode !== verification.code) {
-      return res.status(400).json({ message: 'Invalid verification code' });
-    }
-    
-    // Find the user
-    const user = await User.findOne({ email });
-    
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    
-    // Generate JWT token for automatic login
-    const token = jwt.sign(
-      { userId: user._id, email: user.email },
-      process.env.JWT_SECRET || 'your_secret_key',
-      { expiresIn: '1d' }
-    );
-    
-    // Remove verification code after successful verification
-    delete verificationStore[email];
-    
-    return res.status(200).json({
-      message: 'Verification successful, you are now logged in',
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email
-      }
-    });
-  } catch (error) {
-    console.error('Error in verifyCode:', error);
-    return res.status(500).json({ message: 'Error during verification' });
-  }
+export const logout = async (req: any, res: any) => {
+  res.clearCookie("Authorization").status(200).json({
+    success: true,
+    message: "Logout successful",
+  });
 };
 
-// Resend verification code
-export const resendVerificationCode = async (req: Request, res: Response) => {
+export const sendVerificationToken = async (req: any, res: any) => {
   const { email } = req.body;
-
-  if (!email) {
-    return res.status(400).json({ message: 'Email is required' });
-  }
-
   try {
-    // Check if user exists
     const user = await User.findOne({ email });
-    
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
-    
-    // Generate new verification code
-    const verificationCode = crypto.randomInt(100000, 999999).toString();
-    
-    // Update verification code with new expiration
-    const expiration = new Date();
-    expiration.setHours(expiration.getHours() + 1);
-    
-    verificationStore[email] = {
-      code: verificationCode,
-      email: email,
-      expires: expiration
-    };
-    
-    // Send verification code to email
-    await sendVerificationEmail(email, verificationCode);
-    
-    return res.status(200).json({ 
-      message: 'New verification code sent to email' 
+    if (user.verified) {
+      return res.status(400).json({
+        success: false,
+        message: "User already verified",
+      });
+    }
+
+    const verificationToken = crypto.randomBytes(3).toString("hex");
+    const info = await transport.sendMail({
+      from: process.env.GMAIL_USER,
+      to: user.email,
+      subject: "Verification Token",
+      html: `<p>Your verification token is: <strong>${verificationToken}</strong></p>`,
+    });
+
+    if (info.accepted[0] === user.email) {
+      const hashedCodedToken = hmacProcess(
+        verificationToken,
+        process.env.HMAC_VERIFICATION_KEY || "hMac_verification_#token"
+      );
+      user.verificationToken = hashedCodedToken;
+      user.verificationTokenValidation = Date.now();
+      await user.save();
+      return res.status(200).json({
+        success: true,
+        message: "Verification Token has been sent to your email",
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      message: "Failed to send verification token",
     });
   } catch (error) {
-    console.error('Error in resendVerificationCode:', error);
-    return res.status(500).json({ message: 'Error sending verification email' });
+    console.error("Error in sendVerificationToken:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const verifyVerificationToken = async (req: any, res: any) => {
+  const { email, verificationToken } = req.body;
+  try {
+    verificationToken;
+    const { error, value } = await schemaAcceptToken.validateAsync({
+      email,
+      verificationToken,
+    });
+    if (error) {
+      return res.status(401).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+    const token = verificationToken.toString();
+    const user = await User.findOne({ email }).select(
+      "+verificationToken +verificationTokenValidation"
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    if (user.verified) {
+      return res.status(400).json({
+        success: false,
+        message: "User already verified",
+      });
+    }
+    if (!user.verificationToken || !user.verificationTokenValidation) {
+      return res.status(400).json({
+        success: false,
+        message: "Verification token not found",
+      });
+    }
+    if (Date.now() - user.verificationTokenValidation > 5 * 60 * 1000) {
+      return res.status(400).json({
+        success: false,
+        message: "Verification token expired",
+      });
+    }
+
+    const hashedTokenVal = hmacProcess(
+      token,
+      process.env.HMAC_VERIFICATION_KEY || "hMac_verification_#token"
+    );
+    if (hashedTokenVal === user.verificationToken) {
+      user.verified = true;
+      user.verificationToken = undefined;
+      user.verificationTokenValidation = undefined;
+      await user.save();
+      return res.status(200).json({
+        success: true,
+        message: "User verified successfully",
+      });
+    }
+  } catch (error) {
+    console.error("Error in verifyVerificationToken:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const changePassword = async (req: any, res: any) => {
+  const { userId, verified } = req.user;
+  const { oldPassword, newPassword } = req.body;
+  try {
+    const { error, value } = changePasswordSchema.validate({
+      oldPassword,
+      newPassword,
+    });
+    if (error) {
+      return res
+        .status(401)
+        .json({ success: false, message: error.details[0].message });
+    }
+    if (!verified) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User not verified" });
+    }
+    const user = await User.findOne({ _id: userId }).select("+password");
+    if (!user) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User does not exists" });
+    }
+    const result = await doHashValidation(oldPassword, user.password);
+    if (!result) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid credentials!" });
+    }
+    const hashedPassword = await doHash(newPassword, 12);
+    user.password = hashedPassword;
+    await user.save();
+    return res
+      .status(200)
+      .json({ success: true, message: "Password updated!" });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const sendForgotPasswordToken = async (req: any, res: any) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User does not exists!" });
+    }
+
+    const token = crypto.randomBytes(3).toString("hex");
+    let info = await transport.sendMail({
+      from: process.env.GMAIL_USER,
+      to: user.email,
+      subject: "Forgot password token",
+      html: "<h1>" + token + "</h1>",
+    });
+
+    if (info.accepted[0] === user.email) {
+      const hashedCodeValue = hmacProcess(
+        token,
+        process.env.HMAC_VERIFICATION_KEY || "hMac_verification_#token"
+      );
+      user.forgotPasswordToken = hashedCodeValue;
+      user.forgotPasswordTokenValidation = Date.now();
+      await user.save();
+      return res.status(200).json({ success: true, message: "Token sent!" });
+    }
+    res
+      .status(400)
+      .json({ success: false, message: "There was problem sending the token" });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const verifyForgotPasswordToken = async (req: any, res: any) => {
+  const { email, providedToken, newPassword } = req.body;
+  try {
+    const { error, value } = acceptFPCodeSchema.validate({
+      email,
+      providedToken,
+      newPassword,
+    });
+    if (error) {
+      return res
+        .status(401)
+        .json({ success: false, message: error.details[0].message });
+    }
+
+    const token = providedToken.toString();
+    const user = await User.findOne({ email }).select(
+      "+forgotPasswordToken +forgotPasswordTokenValidation"
+    );
+
+    if (!user) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User does not exists!" });
+    }
+
+    if (!user.forgotPasswordToken || !user.forgotPasswordTokenValidation) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Something went wrong!" });
+    }
+
+    if (Date.now() - user.forgotPasswordTokenValidation > 5 * 60 * 1000) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Token has been expired!" });
+    }
+
+    const hashedCodeValue = hmacProcess(
+      token,
+      process.env.HMAC_VERIFICATION_KEY || "hMac_verification_#token"
+    );
+
+    if (hashedCodeValue === user.forgotPasswordToken) {
+      const hashedPassword = await doHash(newPassword, 12);
+      user.password = hashedPassword;
+      user.forgotPasswordToken = undefined;
+      user.forgotPasswordTokenValidation = undefined;
+      await user.save();
+      return res
+        .status(200)
+        .json({ success: true, message: "Password updated!" });
+    }
+    return res
+      .status(400)
+      .json({ success: false, message: "Unexpected error occured!" });
+  } catch (error) {
+    console.log(error);
   }
 };
