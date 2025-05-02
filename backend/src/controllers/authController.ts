@@ -1,4 +1,4 @@
-const User = require("../models/userModel");
+import User from "../models/userModel"
 import { doHash, doHashValidation, hmacProcess } from "../lib/hashing";
 import {
   schemaSignup,
@@ -12,13 +12,15 @@ import * as crypto from "crypto";
 import { transport } from "../services/sendEmail";
 
 export const signup = async (req: any, res: any) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, confirmPassword } = req.body;
   try {
     const { error, value } = await schemaSignup.validateAsync({
       username,
       email,
       password,
+      confirmPassword,
     });
+
     if (error) {
       return res.status(401).json({
         success: false,

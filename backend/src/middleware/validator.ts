@@ -5,13 +5,17 @@ export const schemaSignup = Joi.object({
     .min(5)
     .max(30)
     .required()
-    .pattern(new RegExp("^[a-zA-Z][a-zA-Z0-9 ]*$")), // Fixed regex
+    .pattern(new RegExp("^[a-zA-Z][a-zA-Z0-9 ]*$")),
   email: Joi.string().min(6).max(60).required().email(),
   password: Joi.string()
     .min(6)
     .max(60)
     .required()
-    .pattern(new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$")), // Fixed regex
+    .pattern(new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$")),
+  confirmPassword: Joi.string()
+    .valid(Joi.ref('password'))
+    .required()
+    .messages({ 'any.only': 'Passwords must match' }),
 });
 
 export const schemaLogin = Joi.object({
@@ -20,7 +24,7 @@ export const schemaLogin = Joi.object({
     .min(6)
     .max(60)
     .required()
-    .pattern(new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$")), // Fixed regex
+    .pattern(new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$")),
 });
 
 export const schemaAcceptToken = Joi.object({
