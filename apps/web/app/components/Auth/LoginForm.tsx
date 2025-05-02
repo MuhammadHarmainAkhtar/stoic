@@ -69,7 +69,7 @@ export default function AuthForm() {
     >
       <div className="absolute inset-0 bg-black/30 " />{" "}
       {/* Overlay for better readability */}
-      <div className="absolute inset-0 flex items-center justify-center p-4">
+      <div className="absolute inset-0 flex items-center justify-center p-4 md:p-6">
         <form
           onSubmit={handleSubmit}
           className="flex flex-col gap-6 w-full max-w-lg p-8 sm:p-10 "
@@ -84,16 +84,16 @@ export default function AuthForm() {
             </h3>
           </div>
 
-          <div className="space-y-6 mx-3">
+          <div className="space-y-6 mx-12 ">
             <CustomField
               type="email"
               placeholder="Email"
-              className="w-full py-4 px-6 rounded-xl text-black placeholder:text-black/80 focus:outline-none transition-all duration-300 font-[bruneyfont] mr-10"
+              className="w-full py-4 px-6 rounded-xl text-black placeholder:text-black/80 focus:outline-none transition-all duration-300 mr-10"
             />
             <CustomField
               type="password"
               placeholder="Password"
-              className="w-full py-4 px-6 rounded-xl text-black placeholder:text-black focus:outline-none transition-all duration-300 font-[bruneyfont] mr-10"
+              className="w-full py-4 px-6 rounded-xl text-black placeholder:text-black focus:outline-none transition-all duration-300 mr-10"
             />
           </div>
 

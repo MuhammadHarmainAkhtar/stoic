@@ -10,8 +10,6 @@ interface Props {
 }
 
 export default function VintageButtons({ className, name, href, type }: Props) {
-  const [hoverButton, setHoverButton] = useState(false);
-
   const content = (
     <div
       className="relative"
@@ -92,13 +90,8 @@ export default function VintageButtons({ className, name, href, type }: Props) {
       </svg>
 
       {/* Button content */}
-      <div
-        className="relative px-5 py-3 text-center"
-        style={{ zIndex: 2 }}
-      >
-        <span className={className}>
-          {name}
-        </span>
+      <div className="relative px-5 py-3 text-center" style={{ zIndex: 2 }}>
+        <span className={className}>{name}</span>
       </div>
     </div>
   );
@@ -108,20 +101,14 @@ export default function VintageButtons({ className, name, href, type }: Props) {
       {type === "submit" ? (
         <button
           type="submit"
-          onMouseEnter={() => setHoverButton(true)}
-          onMouseLeave={() => setHoverButton(false)}
-          className="max-w-xs transition-transform duration-200 font-bold font-[bruneyfont]"
-          style={{ transform: hoverButton ? "scale(1.01)" : "scale(1)" }}
+          className="cursor-pointer max-w-xs transition-colors duration-200 font-bold font-[bruneyfont] hover:text-amber-600"
         >
           {content}
         </button>
       ) : (
         <Link
           href={href || "#"}
-          className="max-w-xs transition-transform duration-200 font-bold font-[bruneyfont]"
-          onMouseEnter={() => setHoverButton(true)}
-          onMouseLeave={() => setHoverButton(false)}
-          style={{ transform: hoverButton ? "scale(1.01)" : "scale(1)" }}
+          className="max-w-xs transition-colors duration-200 font-bold font-[bruneyfont] hover:text-amber-600"
         >
           {content}
         </Link>
