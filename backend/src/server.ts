@@ -4,7 +4,7 @@ import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import router from "./routes/authRoutes";
-const cookieParser = require("cookie-parser");
+import cookieParser from"cookie-parser";
 
 // Load environment variables
 dotenv.config({ path: ".env.local" });
