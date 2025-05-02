@@ -1,14 +1,19 @@
 "use client";
+import { useState } from "react";
 
 interface Props {
   className: string;
   type: "text" | "email" | "password" | "textarea";
   placeholder?: string;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 }
 
-export default function VintageInput({ className, type, placeholder }: Props) {
+export default function VintageInput({ className, type, placeholder, value, onChange }: Props) {
+  const [showPassword, setShowPassword] = useState(false);
+  
   const inputStyles = {
-    background: "transparent", // Make the background transparent
+    background: "transparent",
   };
 
   return (
@@ -90,15 +95,30 @@ export default function VintageInput({ className, type, placeholder }: Props) {
           {type === "textarea" ? (
             <textarea
               placeholder={placeholder}
-              className={`${className} w-full h-32 p-2 focus:outline-none`} // Remove focus border
+              value={value}
+              onChange={onChange}
+              className={`${className} w-full h-32 p-2 focus:outline-none`}
             />
           ) : (
-            <input
-              type={type}
-              placeholder={placeholder}
-              className={`${className} w-full p-2 focus:outline-none`} // Remove focus border
-              required
-            />
+            <div className="relative">
+              <input
+                type={type === "password" ? (showPassword ? "text" : "password") : type}
+                placeholder={placeholder}
+                value={value}
+                onChange={onChange}
+                className={`${className} w-full p-2 focus:outline-none`}
+                required
+              />
+              {type === "password" && (
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-black/80"
+                >
+                  {showPassword ? "🔒" : "👁️"}
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>

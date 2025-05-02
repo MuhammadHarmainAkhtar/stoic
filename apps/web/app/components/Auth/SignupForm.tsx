@@ -10,6 +10,7 @@ export default function SignupForm() {
   const [user, setUser] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isMobile, setIsMobile] = useState(false);
 
   // Check if device is mobile
@@ -31,17 +32,22 @@ export default function SignupForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (password !== confirmPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
+
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ user, email, password }),
       });
 
       if (res.ok) {
-        router.push("#home"); // Redirect after successful login
+        router.push("#home");
       } else {
-        console.error("Login failed");
+        console.error("Registration failed");
       }
     } catch (err) {
       console.error("Something went wrong", err);
@@ -68,46 +74,61 @@ export default function SignupForm() {
         overflow: "hidden",
       }}
     >
-      <div className="absolute inset-0 bg-black/30 " />{" "}
-      {/* Overlay for better readability */}
-      <div className="absolute inset-0 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/30 " />
+      <div className="absolute inset-0 flex items-center justify-center p-2">
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col gap-6 w-full max-w-lg p-8 sm:p-10 "
+          className="flex flex-col lg:flex-row lg:items-center w-full max-w-md lg:max-w-5xl p-4 sm:p-6 lg:p-8 lg:gap-12"
         >
-          <div className="space-y-2 mb-4">
-            <h2 className="text-6xl sm:text-7xl font-bold text-center font-[bruneyfont] text-black/80 mb-2">
+          {/* Welcome Text Section */}
+          <div className="space-y-2 lg:mb-0 lg:flex-1/">
+            <h2 className="text-4xl sm:text-7xl lg:text-8xl font-bold text-center lg:text-left font-[bruneyfont] text-black/80 mb-1 lg:mt-0 mt-4">
               Hey Stoic
             </h2>
-            <h3 className="text-2xl sm:text-3xl font-[bruneyfont] text-center text-black/80">
+            <h3 className="text-2xl sm:text-3xl lg:text-4xl font-[bruneyfont] text-center  text-black/80">
               Welcome To Our Tribe
             </h3>
           </div>
 
-          <div className="space-y-6 mx-3">
-            <CustomField
-              type="text"
-              placeholder="UserName"
-              className="w-full py-4 px-6 rounded-xl text-black placeholder:text-black/80 focus:outline-none transition-all duration-300 font-[bruneyfont] mr-10"
-            />
-            <CustomField
-              type="email"
-              placeholder="Email"
-              className="w-full py-4 px-6 rounded-xl text-black placeholder:text-black/80 focus:outline-none transition-all duration-300 font-[bruneyfont] mr-10"
-            />
-            <CustomField
-              type="password"
-              placeholder="Password"
-              className="w-full py-4 px-6 rounded-xl text-black placeholder:text-black focus:outline-none transition-all duration-300 font-[bruneyfont] mr-10"
-            />
-          </div>
-
-          <div className="flex justify-center lg:justify-start lg:ml-32">
-            <VintageButtons
-              type="submit"
-              name="Sign Up"
-              className="text-black hover:text-amber-900 transition-colors duration-300 text-xl sm:text-2xl py-3 w-100vw] px-6 rounded-xl font-[bruneyfont]"
-            />
+          {/* Form Fields Section */}
+          <div className="mx-12 lg:my-0 my-5">
+            <div className="space-y-4 sm:space-y-6">
+              <CustomField
+                type="text"
+                placeholder="UserName"
+                value={user}
+                onChange={(e) => setUser(e.target.value)}
+                className="w-full py-4 px-6 rounded-xl text-black placeholder:text-black/80 focus:outline-none transition-all duration-300"
+              />
+              <CustomField
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full py-4 px-6 rounded-xl text-black placeholder:text-black/80 focus:outline-none transition-all duration-300"
+              />
+              <CustomField
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full py-4 px-6 rounded-xl text-black placeholder:text-black focus:outline-none transition-all duration-300"
+              />
+              <CustomField
+                type="password"
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full py-4 px-6 rounded-xl text-black placeholder:text-black focus:outline-none transition-all duration-300"
+              />
+              <div className="flex justify-center lg:justify-center pt-4">
+                <VintageButtons
+                  type="submit"
+                  name="Sign Up"
+                  className="text-black hover:text-amber-900 transition-colors duration-300 text-xl sm:text-2xl px-6 font-[bruneyfont]"
+                />
+              </div>
+            </div>
           </div>
         </form>
       </div>
