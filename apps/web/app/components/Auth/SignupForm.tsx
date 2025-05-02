@@ -36,22 +36,29 @@ export default function SignupForm() {
       alert("Passwords do not match!");
       return;
     }
-
-    try {
-      const res = await fetch("/api/auth/register", {
+    else{
+      const response = await fetch("http://localhost:9000/api/auth/signup", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user, email, password }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: user,
+          email,
+          password,
+          confirmPassword,
+        }),
       });
 
-      if (res.ok) {
-        router.push("#home");
+      if (response.ok) {
+        alert("User created successfully!");
+        router.push("/auth/login");
       } else {
-        console.error("Registration failed");
+        const errorData = await response.json();
+        alert(errorData.message || "An error occurred during signup.");
       }
-    } catch (err) {
-      console.error("Something went wrong", err);
     }
+
   };
 
   return (
@@ -94,6 +101,7 @@ export default function SignupForm() {
           <div className="mx-12 lg:my-0 my-5">
             <div className="space-y-4 sm:space-y-6">
               <CustomField
+                name="username"
                 type="text"
                 placeholder="UserName"
                 value={user}
@@ -101,6 +109,7 @@ export default function SignupForm() {
                 className="w-full py-4 px-6 rounded-xl text-black placeholder:text-black/80 focus:outline-none transition-all duration-300"
               />
               <CustomField
+                name="email"
                 type="email"
                 placeholder="Email"
                 value={email}
@@ -108,6 +117,7 @@ export default function SignupForm() {
                 className="w-full py-4 px-6 rounded-xl text-black placeholder:text-black/80 focus:outline-none transition-all duration-300"
               />
               <CustomField
+                name="password"
                 type="password"
                 placeholder="Password"
                 value={password}
@@ -115,6 +125,7 @@ export default function SignupForm() {
                 className="w-full py-4 px-6 rounded-xl text-black placeholder:text-black focus:outline-none transition-all duration-300"
               />
               <CustomField
+                name="confirmPassword"
                 type="password"
                 placeholder="Confirm Password"
                 value={confirmPassword}

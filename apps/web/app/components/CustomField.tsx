@@ -3,6 +3,7 @@ import { useState } from "react";
 
 interface Props {
   className: string;
+  name: string;
   type: "text" | "email" | "password" | "textarea";
   placeholder?: string;
   value?: string;
