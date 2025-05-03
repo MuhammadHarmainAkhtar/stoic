@@ -16,7 +16,7 @@ const Model = () => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
         setModelScale(0.045); // Larger on mobile
-        setModelPosition([0, 0, 0]);
+        setModelPosition([0,  0, 0]);
       } else {
         setModelScale(0.04); // Larger on desktop
         setModelPosition([0, 0, 0]);
@@ -47,7 +47,7 @@ const Model = () => {
 };
 
 export default function ThreeDModel() {
-  const [cameraPosition] = React.useState<[number, number, number]>([0, 2, 6.5]); // Moved camera closer
+  const [cameraPosition] = React.useState<[number, number, number]>([0, 2, 12]); // Moved camera closer
   const [fov, setFov] = React.useState(50);
 
   useEffect(() => {
