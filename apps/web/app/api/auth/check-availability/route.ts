@@ -1,20 +1,29 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
+import { AvailabilityCheck } from '../../../../src/features/auth/types';
 
-export async function GET(request: Request) {
+/**
+ * Handler for checking username or email availability
+ */
+export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
-    const { searchParams } = new URL(request.url);
-    const username = searchParams.get("username");
-    const email = searchParams.get("email");
-
+    const url = new URL(req.url);
+    const username = url.searchParams.get('username');
+    const email = url.searchParams.get('email');
+    
     if (!username && !email) {
       return NextResponse.json(
-        { success: false, message: "Please provide either username or email" },
+        { success: false, message: "Either username or email must be provided" },
         { status: 400 }
       );
     }
-
+    
+    // Call your backend API to check availability
+    const API_URL = process.env.BACKEND_API_URL || "http://localhost:9000";
+    const checkType = username ? 'username' : 'email';
+    const checkValue = username || email;
+    
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/auth/check-availability${request.url.split("/check-availability")[1]}`,
+      `${API_URL}/api/auth/check-availability?${checkType}=${encodeURIComponent(checkValue as string)}`,
       {
         method: "GET",
         headers: {
@@ -22,13 +31,18 @@ export async function GET(request: Request) {
         },
       }
     );
-
-    const data = await response.json();
-    return NextResponse.json(data, { status: response.status });
+    
+    const data = await response.json() as AvailabilityCheck;
+    
+    return NextResponse.json(data, { status: response.ok ? 200 : 400 });
+    
   } catch (error) {
-    console.error("Error checking availability:", error);
+    console.error("Availability check error:", error);
     return NextResponse.json(
-      { success: false, message: "Error checking availability" },
+      {
+        available: false,
+        message: "Error checking availability"
+      },
       { status: 500 }
     );
   }
