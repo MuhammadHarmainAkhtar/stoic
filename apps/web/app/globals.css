@@ -120,6 +120,16 @@ body {
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
+
+@keyframes shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
 /* *{
   border: 1px solid red;
 } */

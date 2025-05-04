@@ -28,12 +28,21 @@ export const signup = async (req: any, res: any) => {
       });
     }
 
-    const existingUser = await User.findOne({ username, email });
-    if (existingUser) {
+    // Check username and email separately
+    const existingUsername = await User.findOne({ username });
+    if (existingUsername) {
       return res
         .status(401)
-        .json({ success: false, message: "User already exists" });
+        .json({ success: false, message: "Username already exists" });
     }
+
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Email already exists" });
+    }
+
     const hashedPassword = await doHash(password, 12);
 
     const newUser = new User({
@@ -43,15 +52,16 @@ export const signup = async (req: any, res: any) => {
     });
     const result = await newUser.save();
     result.password = undefined; // Remove password from the response
-    res
+    return res
       .status(201)
       .json({ success: true, message: "User created successfully", result });
   } catch (error) {
     console.error("Error in signup:", error);
-    return res.status(500).json({ message: "Error during signup" });
+    return res.status(500).json({ 
+      success: false,
+      message: "Error during signup" 
+    });
   }
-
-  res.json({ message: "Signup successful" });
 };
 
 export const login = async (req: any, res: any) => {
@@ -80,6 +90,15 @@ export const login = async (req: any, res: any) => {
         .status(401)
         .json({ success: false, message: "Invalid credentials" });
     }
+
+    // Check if user is verified
+    if (!user.verified) {
+      return res.status(401).json({
+        success: false,
+        message: "Please verify your email before logging in",
+      });
+    }
+
     const token = jwt.sign(
       {
         userId: user._id,
@@ -91,21 +110,34 @@ export const login = async (req: any, res: any) => {
         expiresIn: "2d",
       }
     );
-    console.log("token", token);
-    res
-      .cookie("Authorization", "Bearer" + token, {
+
+    // Remove sensitive data
+    const userResponse = {
+      _id: user._id,
+      email: user.email,
+      username: user.username,
+      verified: user.verified
+    };
+
+    return res
+      .cookie("Authorization", "Bearer " + token, {
         expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
         httpOnly: process.env.NODE_ENV === "production",
         secure: process.env.NODE_ENV === "production", // Set to true in production
       })
+      .status(200)
       .json({
         success: true,
         message: "Login successful",
-        token,
+        user: userResponse,
+        token
       });
-    res.status(200).json({ success: true, message: "Login successful", user });
   } catch (error) {
     console.error("Error in login:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal server error" 
+    });
   }
 };
 
@@ -267,6 +299,10 @@ export const verifyVerificationToken = async (req: any, res: any) => {
         message: "User verified successfully",
       });
     }
+return res.status(400).json({
+      success: false,
+      message: "Invalid verification token",
+    });
   } catch (error) {
     console.error("Error in verifyVerificationToken:", error);
     return res.status(500).json({
@@ -451,5 +487,43 @@ export const verifyForgotPasswordToken = async (req: any, res: any) => {
       .json({ success: false, message: "Unexpected error occured!" });
   } catch (error) {
     console.log(error);
+  }
+};
+
+export const checkAvailability = async (req: any, res: any) => {
+  const { username, email } = req.query;
+  
+  try {
+    if (!username && !email) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide either username or email to check"
+      });
+    }
+
+    if (username) {
+      const existingUsername = await User.findOne({ username });
+      return res.status(200).json({
+        success: true,
+        available: !existingUsername,
+        message: existingUsername ? "Username is already taken" : "Username is available"
+      });
+    }
+    
+    if (email) {
+      const existingEmail = await User.findOne({ email });
+      return res.status(200).json({
+        success: true,
+        available: !existingEmail,
+        message: existingEmail ? "Email is already registered" : "Email is available"
+      });
+    }
+
+  } catch (error) {
+    console.error("Error checking availability:", error);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while checking availability"
+    });
   }
 };
