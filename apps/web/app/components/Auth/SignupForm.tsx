@@ -4,6 +4,7 @@ import { useState, useEffect, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import CustomField from "../CustomField";
 import VintageButtons from "../vintage-button";
+import { useToast } from "../Toast/ToastContext";
 
 export default function SignupForm() {
   const router = useRouter();
@@ -19,6 +20,8 @@ export default function SignupForm() {
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
+  const { addToast } = useToast();
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -27,6 +30,71 @@ export default function SignupForm() {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  // Add debounce function
+  const debounce = (func: Function, wait: number) => {
+    let timeout: NodeJS.Timeout;
+    return (...args: any[]) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func(...args), wait);
+    };
+  };
+
+  // Check availability function
+  const checkAvailability = async (type: 'username' | 'email', value: string) => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const response = await fetch(
+        `${baseUrl}/api/auth/check-availability?${type}=${encodeURIComponent(value)}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include', // Important for CORS
+        }
+      );
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        if (!data.available) {
+          if (type === 'username') {
+            setUserError(data.message || 'Username is already taken');
+          } else {
+            setEmailError(data.message || 'Email is already registered');
+          }
+        } else {
+          // Clear errors if the value is available
+          if (type === 'username') {
+            setUserError('');
+          } else {
+            setEmailError('');
+          }
+        }
+      } else {
+        throw new Error(data.message || 'Network response was not ok');
+      }
+    } catch (error: any) {
+      if (type === 'username') {
+        setUserError('Error checking username availability');
+      } else {
+        setEmailError('Error checking email availability');
+      }
+      console.error(`Error checking ${type} availability:`, error.message);
+    }
+  };
+
+  // Debounced check functions
+  const debouncedUsernameCheck = debounce(
+    (username: string) => checkAvailability('username', username),
+    500
+  );
+
+  const debouncedEmailCheck = debounce(
+    (email: string) => checkAvailability('email', email),
+    500
+  );
 
   // Validation functions
   const validateUsername = (username: string) => {
@@ -84,7 +152,13 @@ export default function SignupForm() {
   ) => {
     const value = e.target.value;
     setUser(value);
-    setUserError(validateUsername(value));
+    const validationError = validateUsername(value);
+    setUserError(validationError);
+    
+    // Only check availability if there are no validation errors
+    if (!validationError && value.length >= 5) {
+      debouncedUsernameCheck(value);
+    }
   };
 
   const handleEmailChange = (
@@ -92,7 +166,13 @@ export default function SignupForm() {
   ) => {
     const value = e.target.value;
     setEmail(value);
-    setEmailError(validateEmail(value));
+    const validationError = validateEmail(value);
+    setEmailError(validationError);
+    
+    // Only check availability if there are no validation errors
+    if (!validationError) {
+      debouncedEmailCheck(value);
+    }
   };
 
   const handlePasswordChange = (
@@ -112,6 +192,17 @@ export default function SignupForm() {
     const value = e.target.value;
     setConfirmPassword(value);
     setConfirmPasswordError(validateConfirmPassword(password, value));
+  };
+
+  const clearForm = () => {
+    setUser("");
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setUserError("");
+    setEmailError("");
+    setPasswordError("");
+    setConfirmPasswordError("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -139,21 +230,30 @@ export default function SignupForm() {
       const data = await response.json();
 
       if (response.ok) {
-        alert(data.message || "User created successfully!");
+        addToast(
+          "User created successfully! Please check your email for verification.",
+          "success"
+        );
+        clearForm();
         router.push("/auth/login");
       } else {
-        if (data.message.includes("exists")) {
-          if (data.message.includes("email")) {
-            setEmailError("This email is already registered");
-          } else if (data.message.includes("username")) {
-            setUserError("This username is already taken");
-          }
+        // Handle specific error cases
+        if (data.message === "Username already exists") {
+          setUserError("This username is already taken");
+          addToast("This username is already taken", "error");
+        } else if (data.message === "Email already exists") {
+          setEmailError("This email is already registered");
+          addToast("This email is already registered", "error");
         } else {
-          alert(data.message || "An error occurred during signup.");
+          // Show the exact error message from the backend
+          addToast(data.message || "An error occurred during signup", "error");
         }
       }
     } catch (error) {
-      alert("An error occurred during signup. Please try again.");
+      addToast(
+        "Failed to connect to the server. Please try again later.",
+        "error"
+      );
       console.error("Signup error:", error);
     }
   };

@@ -8,6 +8,7 @@ import {
   changePassword,
   sendForgotPasswordToken,
   verifyForgotPasswordToken,
+  checkAvailability,
 } from "../controllers/authController";
 import { identifier } from "../middleware/identifier";
 
@@ -21,5 +22,6 @@ router.patch("/verifyToken", verifyVerificationToken);
 router.patch("/changePassword", identifier, changePassword);
 router.patch("/sendFPToken", sendForgotPasswordToken);
 router.patch("/verifyFPToken", verifyForgotPasswordToken);
+router.get("/check-availability", checkAvailability);
 
 export default router;
