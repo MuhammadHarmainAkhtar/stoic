@@ -8,7 +8,7 @@ import {
 } from '../types';
 
 // Use environment variable with fallback for local development
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 export const authService = {
   // Login user

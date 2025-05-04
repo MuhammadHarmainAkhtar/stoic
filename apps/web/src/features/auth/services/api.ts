@@ -24,6 +24,9 @@ export interface LoginRequestBody {
   password: string;
 }
 
+// Get backend API URL from environment variables or use empty string (which will use relative URLs)
+const BACKEND_API_URL = process.env.BACKEND_API_URL || "";
+
 /**
  * Handler for signup API requests
  */
@@ -47,11 +50,8 @@ export async function handleSignup(req: NextRequest): Promise<NextResponse> {
       );
     }
     
-    // Get backend API URL from environment variables or use default
-    const backendUrl = process.env.BACKEND_API_URL || "http://localhost:9000";
-    
     // Send request to backend API
-    const backendResponse = await fetch(`${backendUrl}/api/auth/signup`, {
+    const backendResponse = await fetch(`${BACKEND_API_URL}/api/auth/signup`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -106,11 +106,8 @@ export async function handleLogin(req: NextRequest): Promise<NextResponse> {
       );
     }
     
-    // Get backend API URL from environment variables or use default
-    const backendUrl = process.env.BACKEND_API_URL || "http://localhost:9000";
-    
     // Send request to backend API
-    const backendResponse = await fetch(`${backendUrl}/api/auth/login`, {
+    const backendResponse = await fetch(`${BACKEND_API_URL}/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -167,11 +164,8 @@ export async function handleVerifyEmail(req: NextRequest): Promise<NextResponse>
       );
     }
     
-    // Get backend API URL from environment variables or use default
-    const backendUrl = process.env.BACKEND_API_URL || "http://localhost:9000";
-    
     // Send request to backend API
-    const backendResponse = await fetch(`${backendUrl}/api/auth/verifyToken`, {
+    const backendResponse = await fetch(`${BACKEND_API_URL}/api/auth/verifyToken`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -224,11 +218,8 @@ export async function handleSendVerificationEmail(req: NextRequest): Promise<Nex
       );
     }
     
-    // Get backend API URL from environment variables or use default
-    const backendUrl = process.env.BACKEND_API_URL || "http://localhost:9000";
-    
     // Send request to backend API
-    const backendResponse = await fetch(`${backendUrl}/api/auth/sendVerificationToken`, {
+    const backendResponse = await fetch(`${BACKEND_API_URL}/api/auth/sendVerificationToken`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -281,14 +272,12 @@ export async function handleCheckAvailability(req: NextRequest): Promise<NextRes
       );
     }
     
-    // Get backend API URL from environment variables or use default
-    const backendUrl = process.env.BACKEND_API_URL || "http://localhost:9000";
     const checkType = username ? 'username' : 'email';
     const checkValue = username || email;
     
     // Send request to backend API
     const backendResponse = await fetch(
-      `${backendUrl}/api/auth/check-availability?${checkType}=${encodeURIComponent(checkValue as string)}`,
+      `${BACKEND_API_URL}/api/auth/check-availability?${checkType}=${encodeURIComponent(checkValue as string)}`,
       {
         method: "GET",
         headers: {
