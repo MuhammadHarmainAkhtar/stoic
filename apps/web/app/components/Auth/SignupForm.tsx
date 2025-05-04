@@ -41,45 +41,49 @@ export default function SignupForm() {
   };
 
   // Check availability function
-  const checkAvailability = async (type: 'username' | 'email', value: string) => {
+  const checkAvailability = async (
+    type: "username" | "email",
+    value: string
+  ) => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const baseUrl =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
       const response = await fetch(
         `${baseUrl}/api/auth/check-availability?${type}=${encodeURIComponent(value)}`,
         {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
-          credentials: 'include', // Important for CORS
+          credentials: "include", // Important for CORS
         }
       );
-      
+
       const data = await response.json();
-      
+
       if (response.ok) {
         if (!data.available) {
-          if (type === 'username') {
-            setUserError(data.message || 'Username is already taken');
+          if (type === "username") {
+            setUserError(data.message || "Username is already taken");
           } else {
-            setEmailError(data.message || 'Email is already registered');
+            setEmailError(data.message || "Email is already registered");
           }
         } else {
           // Clear errors if the value is available
-          if (type === 'username') {
-            setUserError('');
+          if (type === "username") {
+            setUserError("");
           } else {
-            setEmailError('');
+            setEmailError("");
           }
         }
       } else {
-        throw new Error(data.message || 'Network response was not ok');
+        throw new Error(data.message || "Network response was not ok");
       }
     } catch (error: any) {
-      if (type === 'username') {
-        setUserError('Error checking username availability');
+      if (type === "username") {
+        setUserError("Error checking username availability");
       } else {
-        setEmailError('Error checking email availability');
+        setEmailError("Error checking email availability");
       }
       console.error(`Error checking ${type} availability:`, error.message);
     }
@@ -87,12 +91,12 @@ export default function SignupForm() {
 
   // Debounced check functions
   const debouncedUsernameCheck = debounce(
-    (username: string) => checkAvailability('username', username),
+    (username: string) => checkAvailability("username", username),
     500
   );
 
   const debouncedEmailCheck = debounce(
-    (email: string) => checkAvailability('email', email),
+    (email: string) => checkAvailability("email", email),
     500
   );
 
@@ -154,7 +158,7 @@ export default function SignupForm() {
     setUser(value);
     const validationError = validateUsername(value);
     setUserError(validationError);
-    
+
     // Only check availability if there are no validation errors
     if (!validationError && value.length >= 5) {
       debouncedUsernameCheck(value);
@@ -168,7 +172,7 @@ export default function SignupForm() {
     setEmail(value);
     const validationError = validateEmail(value);
     setEmailError(validationError);
-    
+
     // Only check availability if there are no validation errors
     if (!validationError) {
       debouncedEmailCheck(value);
@@ -230,12 +234,36 @@ export default function SignupForm() {
       const data = await response.json();
 
       if (response.ok) {
-        addToast(
-          "User created successfully! Please check your email for verification.",
-          "success"
-        );
+        addToast("User created successfully!", "success");
+        // Store email in localStorage before making the verification request
+        localStorage.setItem("verificationEmail", email);
+        try {
+          const emailResponse = await fetch(
+            "http://localhost:9000/api/auth/sendVerificationToken",
+            {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                email: email,
+              }),
+            }
+          );
+
+          if (emailResponse.ok) {
+            const emailData = await emailResponse.json();
+            addToast(emailData.message, "success");
+            router.push("/verifyEmail");
+          } else {
+            const errorData = await emailResponse.json();
+            addToast(errorData.message || "Failed to send verification email", "error");
+          }
+        } catch (error) {
+          console.log(error);
+          addToast("Failed to send verification email", "error");
+        }
         clearForm();
-        router.push("/auth/login");
       } else {
         // Handle specific error cases
         if (data.message === "Username already exists") {

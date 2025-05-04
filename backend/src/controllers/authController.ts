@@ -90,6 +90,15 @@ export const login = async (req: any, res: any) => {
         .status(401)
         .json({ success: false, message: "Invalid credentials" });
     }
+
+    // Check if user is verified
+    if (!user.verified) {
+      return res.status(401).json({
+        success: false,
+        message: "Please verify your email before logging in",
+      });
+    }
+
     const token = jwt.sign(
       {
         userId: user._id,
@@ -101,21 +110,34 @@ export const login = async (req: any, res: any) => {
         expiresIn: "2d",
       }
     );
-    console.log("token", token);
-    res
-      .cookie("Authorization", "Bearer" + token, {
+
+    // Remove sensitive data
+    const userResponse = {
+      _id: user._id,
+      email: user.email,
+      username: user.username,
+      verified: user.verified
+    };
+
+    return res
+      .cookie("Authorization", "Bearer " + token, {
         expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
         httpOnly: process.env.NODE_ENV === "production",
         secure: process.env.NODE_ENV === "production", // Set to true in production
       })
+      .status(200)
       .json({
         success: true,
         message: "Login successful",
-        token,
+        user: userResponse,
+        token
       });
-    res.status(200).json({ success: true, message: "Login successful", user });
   } catch (error) {
     console.error("Error in login:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal server error" 
+    });
   }
 };
 
@@ -277,6 +299,10 @@ export const verifyVerificationToken = async (req: any, res: any) => {
         message: "User verified successfully",
       });
     }
+return res.status(400).json({
+      success: false,
+      message: "Invalid verification token",
+    });
   } catch (error) {
     console.error("Error in verifyVerificationToken:", error);
     return res.status(500).json({

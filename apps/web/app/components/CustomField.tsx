@@ -3,14 +3,15 @@ import { useState } from "react";
 
 interface Props {
   className: string;
-  name: string;
+  name?: string;
   type: "text" | "email" | "password" | "textarea";
   placeholder?: string;
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  maxLength?: number;
 }
 
-export default function VintageInput({ className, type, placeholder, value, onChange }: Props) {
+export default function VintageInput({ className, type, placeholder, value, onChange, maxLength, name }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   
   const inputStyles = {
@@ -95,18 +96,22 @@ export default function VintageInput({ className, type, placeholder, value, onCh
         <div className="relative px-5 py-3" style={{ zIndex: 2 }}>
           {type === "textarea" ? (
             <textarea
+              name={name}
               placeholder={placeholder}
               value={value}
               onChange={onChange}
+              maxLength={maxLength}
               className={`${className} w-full h-32 p-2 focus:outline-none`}
             />
           ) : (
             <div className="relative">
               <input
+                name={name}
                 type={type === "password" ? (showPassword ? "text" : "password") : type}
                 placeholder={placeholder}
                 value={value}
                 onChange={onChange}
+                maxLength={maxLength}
                 className={`${className} w-full p-2 focus:outline-none`}
                 required
               />
