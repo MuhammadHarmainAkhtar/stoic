@@ -15,7 +15,7 @@ import authService from "../services/authService";
 export default function LoginForm() {
   const router = useRouter();
   const { addToast } = useToast();
-  
+
   // Form state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,7 +25,7 @@ export default function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate inputs
     const emailValidationError = validateEmail(email);
     const passwordValidationError = validatePassword(password);
@@ -38,10 +38,10 @@ export default function LoginForm() {
     }
 
     setIsSubmitting(true);
-    
+
     try {
       const response = await authService.login({ email, password });
-      
+
       if (response.success) {
         addToast("Login successful!", "success");
         router.push("/dashboard");
@@ -49,14 +49,40 @@ export default function LoginForm() {
         // Handle specific error cases
         if (response.message?.toLowerCase().includes("credentials")) {
           addToast("Invalid email or password", "error");
-        } else if (response.message?.toLowerCase().includes("verified")) {
+        } else if (!response.message?.toLowerCase().includes("verified")) {
           addToast("Please verify your email before logging in", "warning");
+          try {
+            // Make sure we're passing the email correctly
+            console.log(email);
+            const sendEmailAgain =
+              await authService.sendVerificationEmail(email);
+
+            if (sendEmailAgain.success) {
+              addToast(
+                "A new verification email has been sent. Please check your inbox.",
+                "success"
+              );
+              router.push("/verifyEmail");
+            } else {
+              addToast(
+                sendEmailAgain.message ||
+                  "Error sending the verification email. Please try again.",
+                "error"
+              );
+            }
+          } catch (error) {
+            console.error("Error sending verification email:", error);
+            addToast("Failed to send verification email", "error");
+          }
         } else {
           addToast(response.message || "Login failed", "error");
         }
       }
     } catch (error) {
-      addToast("Failed to connect to the server. Please try again later.", "error");
+      addToast(
+        "Failed to connect to the server. Please try again later.",
+        "error"
+      );
       console.error("Login error:", error);
     } finally {
       setIsSubmitting(false);
@@ -92,8 +118,8 @@ export default function LoginForm() {
               className="w-full py-4 px-6 rounded-xl text-black placeholder:text-black/80 focus:outline-none transition-all duration-300"
             />
             {emailError && (
-              <div className="absolute -bottom-5 left-0 w-full">
-                <p className="text-red-500 text-[10px] sm:text-xs px-2 leading-tight bg-white/80 rounded-md py-0.5 mx-1">
+              <div className="left-0 w-full">
+                <p className="text-red-500 text-[10px] sm:text-xs px-2 leading-tight rounded-md py-0.5 mx-1">
                   {emailError}
                 </p>
               </div>
@@ -113,8 +139,8 @@ export default function LoginForm() {
               className="w-full py-4 px-6 rounded-xl text-black placeholder:text-black/80 focus:outline-none transition-all duration-300"
             />
             {passwordError && (
-              <div className="absolute -bottom-5 left-0 w-full">
-                <p className="text-red-500 text-[10px] sm:text-xs px-2 leading-tight bg-white/80 rounded-md py-0.5 mx-1">
+              <div className=" left-0 w-full">
+                <p className="text-red-500 text-[10px] sm:text-xs px-2 leading-tight rounded-md py-0.5 mx-1">
                   {passwordError}
                 </p>
               </div>
@@ -126,7 +152,7 @@ export default function LoginForm() {
           <VintageButtons
             type="submit"
             name="Sign In"
-            className={`text-black hover:text-amber-900 duration-300 text-xl sm:text-2xl px-6 font-[bruneyfont] ${isSubmitting ? 'opacity-50' : ''}`}
+            className={`text-black hover:text-amber-900 duration-300 text-xl sm:text-2xl px-6 font-[bruneyfont] ${isSubmitting ? "opacity-50" : ""}`}
           />
         </div>
       </form>

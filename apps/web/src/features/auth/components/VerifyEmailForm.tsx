@@ -73,7 +73,7 @@ export default function VerifyEmailForm() {
 
   return (
     <AuthLayout>
-      <div className="space-y-4 lg:mb-0 lg:flex-1 flex flex-col items-center">
+      <div className="mt-26 space-y-4 lg:mb-0 lg:flex-1 flex flex-col items-center">
         <h2 className="text-4xl sm:text-7xl lg:text-8xl font-bold text-center lg:text-left font-[bruneyfont] text-black/80 mb-1 lg:mt-0 mt-4">
           Hey Stoic
         </h2>

@@ -8,7 +8,7 @@ import {
 } from '../types';
 
 // Use environment variable with fallback for local development
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 export const authService = {
   // Login user
@@ -17,8 +17,8 @@ export const authService = {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
-        "credentials": "include"
       },
+      credentials: "include",
       body: JSON.stringify(credentials),
     });
     
@@ -76,6 +76,26 @@ export const authService = {
     );
     
     return await response.json();
+  },
+
+  // Validate token
+  validateToken: async (token: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`${API_URL}/api/auth/validate-token`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+      
+      const data = await response.json();
+      return data.success === true;
+    } catch (error) {
+      console.error("Token validation error:", error);
+      return false;
+    }
   },
 };
 

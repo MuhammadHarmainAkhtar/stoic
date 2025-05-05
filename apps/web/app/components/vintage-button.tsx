@@ -7,6 +7,7 @@ interface Props {
   className: string;
   href?: string; // Optional now
   type?: "button" | "submit"; // "button" or "submit" for <button>
+  onClick?: () => void; // Optional click handler
 }
 
 export default function VintageButtons({ className, name, href, type }: Props) {
