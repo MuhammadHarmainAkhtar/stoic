@@ -325,23 +325,35 @@ export const changePassword = async (req: any, res: any) => {
         .status(401)
         .json({ success: false, message: error.details[0].message });
     }
+    
     if (!verified) {
       return res
         .status(401)
         .json({ success: false, message: "User not verified" });
     }
+    
     const user = await User.findOne({ _id: userId }).select("+password");
     if (!user) {
       return res
         .status(401)
         .json({ success: false, message: "User does not exists" });
     }
-    const result = await doHashValidation(oldPassword, user.password);
-    if (!result) {
+    
+    // Validate old password
+    const isOldPasswordValid = await doHashValidation(oldPassword, user.password);
+    if (!isOldPasswordValid) {
       return res
         .status(401)
         .json({ success: false, message: "Invalid credentials!" });
     }
+    
+    // Check if new password is different from old password
+    if (oldPassword === newPassword) {
+      return res
+        .status(400)
+        .json({ success: false, message: "New password cannot be the same as your current password" });
+    }
+    
     const hashedPassword = await doHash(newPassword, 12);
     user.password = hashedPassword;
     await user.save();
@@ -349,7 +361,10 @@ export const changePassword = async (req: any, res: any) => {
       .status(200)
       .json({ success: true, message: "Password updated!" });
   } catch (error) {
-    console.log(error);
+    console.error("Error in changePassword:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -446,7 +461,7 @@ export const verifyForgotPasswordToken = async (req: any, res: any) => {
 
     const token = providedToken.toString();
     const user = await User.findOne({ email }).select(
-      "+forgotPasswordToken +forgotPasswordTokenValidation"
+      "+forgotPasswordToken +forgotPasswordTokenValidation +password"
     );
 
     if (!user) {
@@ -472,21 +487,33 @@ export const verifyForgotPasswordToken = async (req: any, res: any) => {
       process.env.HMAC_VERIFICATION_KEY || "hMac_verification_#token"
     );
 
-    if (hashedCodeValue === user.forgotPasswordToken) {
-      const hashedPassword = await doHash(newPassword, 12);
-      user.password = hashedPassword;
-      user.forgotPasswordToken = undefined;
-      user.forgotPasswordTokenValidation = undefined;
-      await user.save();
+    if (hashedCodeValue !== user.forgotPasswordToken) {
       return res
-        .status(200)
-        .json({ success: true, message: "Password updated!" });
+        .status(400)
+        .json({ success: false, message: "Invalid token provided!" });
     }
+    
+    // Check if new password matches the current password
+    const isSamePassword = await doHashValidation(newPassword, user.password);
+    if (isSamePassword) {
+      return res
+        .status(400)
+        .json({ success: false, message: "New password cannot be the same as your current password" });
+    }
+
+    const hashedPassword = await doHash(newPassword, 12);
+    user.password = hashedPassword;
+    user.forgotPasswordToken = undefined;
+    user.forgotPasswordTokenValidation = undefined;
+    await user.save();
     return res
-      .status(400)
-      .json({ success: false, message: "Unexpected error occured!" });
+      .status(200)
+      .json({ success: true, message: "Password updated!" });
   } catch (error) {
-    console.log(error);
+    console.error("Error in verifyForgotPasswordToken:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 

@@ -4,11 +4,14 @@ import {
   SignupData, 
   VerifyEmailData, 
   AvailabilityCheck,
-  AuthResponse
+  AuthResponse,
+  ChangePasswordData,
+  ForgotPasswordData,
+  VerifyForgotPasswordData
 } from '../types';
 
 // Use environment variable with fallback for local development
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 export const authService = {
   // Login user
@@ -17,8 +20,8 @@ export const authService = {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
-        "credentials": "include"
       },
+      credentials: "include",
       body: JSON.stringify(credentials),
     });
     
@@ -77,6 +80,46 @@ export const authService = {
     
     return await response.json();
   },
-};
+
+  // Change password
+  changePassword: async (data: ChangePasswordData): Promise<AuthResponse> => {
+    const response = await fetch(`${API_URL}/api/auth/changePassword`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // Important to include credentials for authentication
+      body: JSON.stringify(data),
+    });
+    
+    return await response.json();
+  },
+  
+  // Send forgot password token
+  sendForgotPasswordToken: async (data: ForgotPasswordData): Promise<AuthResponse> => {
+    const response = await fetch(`${API_URL}/api/auth/sendFPToken`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    
+    return await response.json();
+  },
+  
+  // Verify forgot password token and reset password
+  verifyForgotPassword: async (data: VerifyForgotPasswordData): Promise<AuthResponse> => {
+    const response = await fetch(`${API_URL}/api/auth/verifyFPToken`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    
+    return await response.json();
+  }
+}
 
 export default authService;

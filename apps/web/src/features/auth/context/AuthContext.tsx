@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { AuthState, User } from '../types';
+import { User } from '../types';
 
 // Define the shape of the context
 interface AuthContextType {

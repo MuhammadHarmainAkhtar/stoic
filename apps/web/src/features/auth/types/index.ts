@@ -23,6 +23,21 @@ export interface SignupData {
   confirmPassword: string;
 }
 
+export interface ChangePasswordData {
+  oldPassword: string;
+  newPassword: string;
+}
+
+export interface ForgotPasswordData {
+  email: string;
+}
+
+export interface VerifyForgotPasswordData {
+  email: string;
+  providedToken: string;
+  newPassword: string;
+}
+
 export interface VerifyEmailData {
   email: string;
   verificationToken: string;

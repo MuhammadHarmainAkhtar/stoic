@@ -1,5 +1,4 @@
 "use client";
-import { useState } from "react";
 import Link from "next/link";
 
 interface Props {
@@ -7,9 +6,16 @@ interface Props {
   className: string;
   href?: string; // Optional now
   type?: "button" | "submit"; // "button" or "submit" for <button>
+  onClick?: () => void; // Optional click handler
 }
 
-export default function VintageButtons({ className, name, href, type }: Props) {
+export default function VintageButtons({
+  className,
+  name,
+  href,
+  type,
+  onClick,
+}: Props) {
   const content = (
     <div
       className="relative"
@@ -100,6 +106,8 @@ export default function VintageButtons({ className, name, href, type }: Props) {
     <div className="flex">
       {type === "submit" ? (
         <button
+          name={name}
+          onClick={onClick}
           type="submit"
           className="cursor-pointer max-w-xs transition-colors duration-200 font-bold font-[bruneyfont] hover:text-amber-600"
         >
@@ -107,6 +115,7 @@ export default function VintageButtons({ className, name, href, type }: Props) {
         </button>
       ) : (
         <Link
+          onClick={onClick}
           href={href || "#"}
           className="max-w-xs transition-colors duration-200 font-bold font-[bruneyfont] hover:text-amber-600"
         >

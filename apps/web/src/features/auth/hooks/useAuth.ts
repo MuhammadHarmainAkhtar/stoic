@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useCallback } from 'react';
 import { User, AuthState } from '../types';
 import authService from '../services/authService';
@@ -18,15 +20,11 @@ export const useAuth = () => {
     const initAuth = async () => {
       try {
         // Check if user is logged in by verifying token or session
-        // This depends on your authentication approach (JWT, session, etc.)
         const userJson = localStorage.getItem('user');
         const token = localStorage.getItem('token');
         
         if (userJson && token) {
           const user = JSON.parse(userJson) as User;
-          
-          // Validate token/session with your backend if needed
-          // const isValid = await authService.validateToken(token);
           
           setAuthState({
             user,
@@ -65,36 +63,64 @@ export const useAuth = () => {
     
     try {
       const response = await authService.login({ email, password });
+      console.log("Login response:", response); // Debug log
       
-      if (response.success && response.data?.user) {
-        // Store user data and token
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        if (response.data.token) {
-          localStorage.setItem('token', response.data.token);
+      if (response.success) {
+        // Check if the API returned data in the expected format
+        // Some API endpoints might return user/token directly in response object
+        // rather than inside a data property
+        let userData = null;
+        let tokenData = null;
+        
+        // Handle possible response formats
+        if (response.data) {
+          userData = response.data.user;
+          tokenData = response.data.token;
+        } else {
+          // Try to get data from response directly - this requires type assertion
+          // since our type definition doesn't match actual response
+          const anyResponse = response as any;
+          if (anyResponse.user) {
+            userData = anyResponse.user;
+          }
+          if (anyResponse.token) {
+            tokenData = anyResponse.token;
+          }
         }
         
-        setAuthState({
-          user: response.data.user,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null
-        });
-        
-        return { success: true };
-      } else {
-        setAuthState(prev => ({
-          ...prev,
-          isLoading: false,
-          error: response.message || "Login failed"
-        }));
-        
-        return { 
-          success: false, 
-          message: response.message
-        };
+        if (userData) {
+          // Store user data and token
+          localStorage.setItem('user', JSON.stringify(userData));
+          
+          if (tokenData) {
+            localStorage.setItem('token', tokenData);
+          }
+          
+          setAuthState({
+            user: userData,
+            isAuthenticated: true,
+            isLoading: false,
+            error: null
+          });
+          
+          return { success: true };
+        }
       }
+      
+      // If we get here, either success was false or there was no user data
+      setAuthState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: response.message || "Login failed"
+      }));
+      
+      return { 
+        success: false, 
+        message: response.message
+      };
     } catch (error) {
       const errorMessage = "Failed to connect to the server";
+      console.error("Login error:", error);
       
       setAuthState(prev => ({
         ...prev,

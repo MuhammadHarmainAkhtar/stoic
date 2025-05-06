@@ -1,24 +1,70 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import VintageButtons from "./vintage-button";
+import { useAuthContext } from "../../src/features/auth/context/AuthContext";
 
 const navItems = [
-  { name: "home", icon: "/HomeIcon.png" },
-  { name: "sage bot", icon: "/SageBot.png" },
-  { name: "tribe", icon: "/Tribe.png" },
-  { name: "profile", icon: "/Profile.png" },
-  { name: "settings", icon: "/settingsIcon.png" },
+  { name: "home", icon: "/HomeIcon.png", href: "/" },
+  { name: "sage bot", icon: "/SageBot.png", href: "/sagebot" },
+  { name: "tribe", icon: "/Tribe.png", href: "/tribe" },
+  { name: "profile", icon: "/Profile.png", href: "/profile" },
+  { name: "settings", icon: "/settingsIcon.png", href: "/settings" },
 ];
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const auth = useAuthContext();
+  const [mounted, setMounted] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Use useEffect to handle client-side rendering
+  useEffect(() => {
+    setMounted(true);
+
+    // Close dropdown when clicking outside
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleNavItemClick = (name: string) => {
     setIsMenuOpen(false);
-    console.log(name);
-    // Add your navigation logic here if needed
+  };
+
+  const handleLogout = () => {
+    auth.logout();
+    setIsMenuOpen(false);
+    setIsDropdownOpen(false);
+  };
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  // Get user initials for the avatar
+  const getUserInitials = () => {
+    if (auth.user?.username) {
+      return auth.user.username.slice(0, 2).toUpperCase();
+    }
+    return "ST"; // Default - Stoic Tribe
+  };
+
+  // Separate the authentication state check into a clear function
+  const isUserLoggedIn = () => {
+    return mounted && auth.isAuthenticated();
   };
 
   return (
@@ -44,14 +90,15 @@ const Navbar = () => {
       >
         {/* Logo Section - Left */}
         <div className="mt-4 flex-shrink-0 z-10 mr-1">
-          <Link href="#home">
-          <Image
-            src="/navImage.jpg"
-            alt="Nav Logo"
-            height={70}
-            width={70}
-            className="z-10 rounded-xl cursor-pointer"
-          /></Link>
+          <Link href="/">
+            <Image
+              src="/navImage.jpg"
+              alt="Nav Logo"
+              height={70}
+              width={70}
+              className="z-10 rounded-xl cursor-pointer"
+            />
+          </Link>
         </div>
 
         {/* Hamburger Menu Button - Mobile Only */}
@@ -71,9 +118,11 @@ const Navbar = () => {
           <ul className="flex space-x-10 text-amber-900 font-semibold text-base">
             {navItems.map((item) => (
               <div key={item.name} className="flex items-center gap-2">
-                <li className="text-xl text-black hover:text-amber-600 cursor-pointer transition-colors duration-200 font-[bruneyfont]">
-                  {item.name}
-                </li>
+                <Link href={item.href}>
+                  <li className="text-lg text-black hover:text-amber-600 cursor-pointer transition-colors duration-200 font-[bruneyfont]">
+                    {item.name}
+                  </li>
+                </Link>
                 <Image
                   src={item.icon}
                   className="h-10 rounded-lg hover:scale-125 transition-transform duration-200"
@@ -87,23 +136,69 @@ const Navbar = () => {
         </div>
 
         {/* Auth Buttons - Desktop */}
-        <div className="hidden lg:flex mt-4 flex-shrink-0 items-center space-x-1 z-10 ml-1 ">
-          <Link
-            href={"/login"}
-            className="text-black px-2 hover:text-amber-600 font-medium transition-colors duration-200"
-          >
-            Login
-          </Link>
-          <VintageButtons
-            className="text-black hover:text-amber-900 transition-colors"
-            name="Signup"
-            href="/signup"
-          />
+        <div className="hidden lg:flex mt-4 flex-shrink-0 items-center space-x-2 z-10 ml-1">
+          {auth.isAuthenticated() ? (
+            <>
+              <VintageButtons
+                className="text-black hover:text-amber-900 transition-colors"
+                name="Dashboard"
+                href="/dashboard"
+              />
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={toggleDropdown}
+                  className="w-10 cursor-pointer h-10 rounded-full border-2 border-amber-800 overflow-hidden flex items-center justify-center bg-amber-50 hover:border-amber-600 transition-colors ml-2"
+                  title="Click to open menu"
+                >
+                  <span className="font-[bruneyfont] text-lg text-black">
+                    {getUserInitials()}
+                  </span>
+                </button>
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 py-2 w-48 bg-white rounded-md shadow-xl z-20 border border-amber-200">
+                    <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
+                      <p className="font-semibold">{auth.user?.username}</p>
+                      <p className="text-xs text-gray-500">
+                        {auth.user?.email}
+                      </p>
+                    </div>
+                    <Link
+                      href="/changePassword"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-800"
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
+                      Change Password
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="cursor-pointer block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-amber-50 hover:text-red-700"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <Link
+                href={"/login"}
+                className="text-black px-2 hover:text-amber-600 font-medium transition-colors duration-200"
+              >
+                Login
+              </Link>
+              <VintageButtons
+                className="text-black hover:text-amber-900 transition-colors"
+                name="Signup"
+                href="/signup"
+              />
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Overlay */}
         <div
-          className={`fixed inset-0  bg-opacity-50 z-30 lg:hidden transition-opacity duration-300 ${
+          className={`fixed inset-0 bg-opacity-50 z-30 lg:hidden transition-opacity duration-300 ${
             isMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
           onClick={() => setIsMenuOpen(false)}
@@ -115,6 +210,17 @@ const Navbar = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-4">
+              {/* User Profile Display - Mobile */}
+              {auth.isAuthenticated() && (
+                <div className="flex items-center space-x-3 mb-6 mt-6 border-b border-amber-200 pb-4">
+                  <div className="w-12 h-12 rounded-full border-2 border-amber-800 overflow-hidden flex items-center justify-center bg-amber-50">
+                    <span className="font-[bruneyfont] text-xl text-black">
+                      {getUserInitials()}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* Close Button */}
               <button
                 onClick={() => setIsMenuOpen(false)}
@@ -123,8 +229,8 @@ const Navbar = () => {
                 <Image
                   src="/sword.avif"
                   alt="Close menu"
-                  width={24}
-                  height={24}
+                  width={30}
+                  height={30}
                   className="transition-transform duration-200 hover:scale-110"
                 />
               </button>
@@ -142,24 +248,48 @@ const Navbar = () => {
                       height={32}
                       width={32}
                     />
-                    <li className="text-lg text-black hover:text-amber-600 cursor-pointer transition-colors duration-200 font-[bruneyfont]">
-                      {item.name}
-                    </li>
+                    <Link href={item.href}>
+                      <li className="text-lg text-black hover:text-amber-600 cursor-pointer transition-colors duration-200 font-[bruneyfont]">
+                        {item.name}
+                      </li>
+                    </Link>
                   </div>
                 ))}
               </ul>
               <div className="mt-8 space-y-4">
-                <Link
-                  href={"/login"}
-                  className="block text-black px-2 hover:text-amber-600 font-medium transition-colors duration-200"
-                >
-                  Login
-                </Link>
-                <VintageButtons
-                  className="text-black hover:text-amber-900 transition-colors w-full"
-                  name="Signup"
-                  href="/signup"
-                />
+                {isUserLoggedIn() ? (
+                  <>
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="text-black px-2 hover:text-amber-600 font-medium transition-colors duration-200 flex items-center gap-2"
+                    >
+                      <span className="font-[bruneyfont] text-xl">
+                        Dashboard
+                      </span>
+                    </Link>
+                    <VintageButtons
+                      className="text-black hover:text-amber-900 transition-colors w-full"
+                      name="Logout"
+                      onClick={handleLogout}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      onClick={() => setIsMenuOpen(false)}
+                      href={"/login"}
+                      className="block text-black px-2 hover:text-amber-600 font-medium transition-colors duration-200"
+                    >
+                      Login
+                    </Link>
+                    <VintageButtons
+                      className="text-black hover:text-amber-900 transition-colors w-full"
+                      name="Signup"
+                      href="/signup"
+                    />
+                  </>
+                )}
               </div>
             </div>
           </div>
