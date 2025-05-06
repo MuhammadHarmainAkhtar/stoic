@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from 'react';
 import authService from '../services/authService';
 import { debounce } from '../utils/validation';

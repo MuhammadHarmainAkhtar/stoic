@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import VintageButtons from "./vintage-button";
@@ -15,12 +15,29 @@ const navItems = [
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const auth = useAuthContext();
   const [mounted, setMounted] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Use useEffect to handle client-side rendering
   useEffect(() => {
     setMounted(true);
+
+    // Close dropdown when clicking outside
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   const handleNavItemClick = (name: string) => {
@@ -30,6 +47,11 @@ const Navbar = () => {
   const handleLogout = () => {
     auth.logout();
     setIsMenuOpen(false);
+    setIsDropdownOpen(false);
+  };
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
   };
 
   // Get user initials for the avatar
@@ -39,7 +61,7 @@ const Navbar = () => {
     }
     return "ST"; // Default - Stoic Tribe
   };
-  
+
   // Separate the authentication state check into a clear function
   const isUserLoggedIn = () => {
     return mounted && auth.isAuthenticated();
@@ -97,7 +119,7 @@ const Navbar = () => {
             {navItems.map((item) => (
               <div key={item.name} className="flex items-center gap-2">
                 <Link href={item.href}>
-                  <li className="text-xl text-black hover:text-amber-600 cursor-pointer transition-colors duration-200 font-[bruneyfont]">
+                  <li className="text-lg text-black hover:text-amber-600 cursor-pointer transition-colors duration-200 font-[bruneyfont]">
                     {item.name}
                   </li>
                 </Link>
@@ -115,20 +137,47 @@ const Navbar = () => {
 
         {/* Auth Buttons - Desktop */}
         <div className="hidden lg:flex mt-4 flex-shrink-0 items-center space-x-2 z-10 ml-1">
-          {isUserLoggedIn() ? (
+          {auth.isAuthenticated() ? (
             <>
               <VintageButtons
                 className="text-black hover:text-amber-900 transition-colors"
                 name="Dashboard"
                 href="/dashboard"
               />
-              <button
-                onClick={handleLogout}
-                className="w-10 h-10 rounded-full border-2 border-amber-800 overflow-hidden flex items-center justify-center bg-amber-50 hover:border-amber-600 transition-colors ml-2"
-                title="Click to logout"
-              >
-                <span className="font-[bruneyfont] text-lg text-black">{getUserInitials()}</span>
-              </button>
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={toggleDropdown}
+                  className="w-10 cursor-pointer h-10 rounded-full border-2 border-amber-800 overflow-hidden flex items-center justify-center bg-amber-50 hover:border-amber-600 transition-colors ml-2"
+                  title="Click to open menu"
+                >
+                  <span className="font-[bruneyfont] text-lg text-black">
+                    {getUserInitials()}
+                  </span>
+                </button>
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 py-2 w-48 bg-white rounded-md shadow-xl z-20 border border-amber-200">
+                    <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
+                      <p className="font-semibold">{auth.user?.username}</p>
+                      <p className="text-xs text-gray-500">
+                        {auth.user?.email}
+                      </p>
+                    </div>
+                    <Link
+                      href="/changePassword"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-800"
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
+                      Change Password
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="cursor-pointer block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-amber-50 hover:text-red-700"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             </>
           ) : (
             <>
@@ -162,22 +211,16 @@ const Navbar = () => {
           >
             <div className="p-4">
               {/* User Profile Display - Mobile */}
-              {isUserLoggedIn() && (
+              {auth.isAuthenticated() && (
                 <div className="flex items-center space-x-3 mb-6 mt-6 border-b border-amber-200 pb-4">
                   <div className="w-12 h-12 rounded-full border-2 border-amber-800 overflow-hidden flex items-center justify-center bg-amber-50">
-                    <span className="font-[bruneyfont] text-xl text-black">{getUserInitials()}</span>
-                  </div>
-                  <div>
-                    <Link
-                      href="/profile"
-                      className="font-[bruneyfont] text-black hover:text-amber-700 transition-colors"
-                    >
-                      My Profile
-                    </Link>
+                    <span className="font-[bruneyfont] text-xl text-black">
+                      {getUserInitials()}
+                    </span>
                   </div>
                 </div>
               )}
-              
+
               {/* Close Button */}
               <button
                 onClick={() => setIsMenuOpen(false)}
@@ -186,8 +229,8 @@ const Navbar = () => {
                 <Image
                   src="/sword.avif"
                   alt="Close menu"
-                  width={24}
-                  height={24}
+                  width={30}
+                  height={30}
                   className="transition-transform duration-200 hover:scale-110"
                 />
               </button>
@@ -221,7 +264,9 @@ const Navbar = () => {
                       onClick={() => setIsMenuOpen(false)}
                       className="text-black px-2 hover:text-amber-600 font-medium transition-colors duration-200 flex items-center gap-2"
                     >
-                      <span className="font-[bruneyfont] text-xl">Dashboard</span>
+                      <span className="font-[bruneyfont] text-xl">
+                        Dashboard
+                      </span>
                     </Link>
                     <VintageButtons
                       className="text-black hover:text-amber-900 transition-colors w-full"

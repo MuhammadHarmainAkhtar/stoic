@@ -4,7 +4,10 @@ import {
   SignupData, 
   VerifyEmailData, 
   AvailabilityCheck,
-  AuthResponse
+  AuthResponse,
+  ChangePasswordData,
+  ForgotPasswordData,
+  VerifyForgotPasswordData
 } from '../types';
 
 // Use environment variable with fallback for local development
@@ -78,25 +81,45 @@ export const authService = {
     return await response.json();
   },
 
-  // Validate token
-  validateToken: async (token: string): Promise<boolean> => {
-    try {
-      const response = await fetch(`${API_URL}/api/auth/validate-token`, {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-      
-      const data = await response.json();
-      return data.success === true;
-    } catch (error) {
-      console.error("Token validation error:", error);
-      return false;
-    }
+  // Change password
+  changePassword: async (data: ChangePasswordData): Promise<AuthResponse> => {
+    const response = await fetch(`${API_URL}/api/auth/changePassword`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // Important to include credentials for authentication
+      body: JSON.stringify(data),
+    });
+    
+    return await response.json();
   },
-};
+  
+  // Send forgot password token
+  sendForgotPasswordToken: async (data: ForgotPasswordData): Promise<AuthResponse> => {
+    const response = await fetch(`${API_URL}/api/auth/sendFPToken`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    
+    return await response.json();
+  },
+  
+  // Verify forgot password token and reset password
+  verifyForgotPassword: async (data: VerifyForgotPasswordData): Promise<AuthResponse> => {
+    const response = await fetch(`${API_URL}/api/auth/verifyFPToken`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    
+    return await response.json();
+  }
+}
 
 export default authService;

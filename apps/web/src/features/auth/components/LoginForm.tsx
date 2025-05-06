@@ -8,6 +8,8 @@ import VintageButtons from "../../../../app/components/vintage-button";
 import { validateEmail, validatePassword } from "../utils/validation";
 import AuthLayout from "./AuthLayout";
 import authService from "../services/authService";
+import { useAuthContext } from "../context/AuthContext";
+import Link from "next/link";
 
 /**
  * LoginForm component handling user authentication
@@ -15,6 +17,7 @@ import authService from "../services/authService";
 export default function LoginForm() {
   const router = useRouter();
   const { addToast } = useToast();
+  const { login } = useAuthContext();
 
   // Form state
   const [email, setEmail] = useState("");
@@ -40,7 +43,8 @@ export default function LoginForm() {
     setIsSubmitting(true);
 
     try {
-      const response = await authService.login({ email, password });
+      // Use the login function from AuthContext instead of directly calling authService
+      const response = await login(email, password);
 
       if (response.success) {
         addToast("Login successful!", "success");
@@ -49,11 +53,9 @@ export default function LoginForm() {
         // Handle specific error cases
         if (response.message?.toLowerCase().includes("credentials")) {
           addToast("Invalid email or password", "error");
-        } else if (!response.message?.toLowerCase().includes("verified")) {
+        } else if (response.message?.toLowerCase().includes("verify")) {
           addToast("Please verify your email before logging in", "warning");
           try {
-            // Make sure we're passing the email correctly
-            console.log(email);
             const sendEmailAgain =
               await authService.sendVerificationEmail(email);
 
@@ -104,7 +106,7 @@ export default function LoginForm() {
           </h3>
         </div>
 
-        <div className="space-y-6 mx-12">
+        <div className="space-y-6 mx-6 lg:mx-14 md:mx-14">
           <div className="relative">
             <CustomField
               name="email"
@@ -145,6 +147,15 @@ export default function LoginForm() {
                 </p>
               </div>
             )}
+          </div>
+          
+          <div className="flex justify-center">
+            <Link 
+              href="/forgotPassword"
+              className="text-amber-900 hover:text-amber-700 text-sm underline"
+            >
+              Forgot password?
+            </Link>
           </div>
         </div>
 
