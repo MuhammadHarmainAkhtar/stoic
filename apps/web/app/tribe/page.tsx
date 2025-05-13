@@ -1,9 +1,12 @@
-import React from 'react'
+import React from "react";
 
 const page = () => {
   return (
-    <div className='text-9xl flex items-center justify-center h-screen'>tribe</div>
-  )
-}
+    <div className="text-9xl flex items-center justify-center h-screen">
+      The Forum 
+      
+    </div>
+  );
+};
 
-export default page
+export default page;
