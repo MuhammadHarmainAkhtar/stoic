@@ -11,17 +11,104 @@ import Notification, { NotificationType } from "../models/notificationModel";
 // Get all circles (public info only)
 export const getAllCircles = async (req: Request, res: Response) => {
   try {
+    // Find admin user to be used as the guru for default circles
+    const adminUser = await User.findOne({ isAdmin: true }) || await User.findOne();
+    
+    if (!adminUser) {
+      return res.status(500).json({
+        status: "error",
+        message: "No users found in the system",
+      });
+    }
+
+    // Check if default circles exist
+    const defaultCirclesExist = await Circle.findOne({ isDefault: true });
+    
+    // Define the default circles data
+    const defaultCirclesData = [
+      {
+        name: "Discipline & Focus",
+        image: "/uploads/circles/stoic-warriors.jpg",
+        bio: "A circle for those who practice stoicism in their daily lives.",
+        guru: adminUser._id,
+        rank: 1,
+        isDefault: true,
+      },
+      {
+        name: "Meditation Masters",
+        image: "/uploads/circles/meditation.jpg",
+        bio: "Daily meditation practice and mindfulness techniques.",
+        guru: adminUser._id,
+        rank: 2,
+        isDefault: true,
+      },
+      {
+        name: "Ethical Leadership",
+        image: "/uploads/circles/leadership.jpg",
+        bio: "Discussing leadership principles based on stoic philosophy.",
+        guru: adminUser._id,
+        rank: 3,
+        isDefault: true,
+      },
+      {
+        name: "Stoic Parenting",
+        image: "/uploads/circles/leadership.jpg",
+        bio: "Discussing how can be the best parent that create future leaders.",
+        guru: adminUser._id,
+        rank: 4,
+        isDefault: true,
+      },
+      {
+        name: "Heartbreak & Healing",
+        image: "/uploads/circles/leadership.jpg",
+        bio: "Heal yourself after you have tried your best whether its a relationship or anything that broke you and you want a great comeback from the biggest disaster of your life.",
+        guru: adminUser._id,
+        rank: 5,
+        isDefault: true,
+      },
+      {
+        name: "Psychological Facts",
+        image: "/uploads/circles/leadership.jpg",
+        bio: "Some mindblowing facts that can blow your mind and ready your mind to train to become a stoic.",
+        guru: adminUser._id,
+        rank: 6,
+        isDefault: true,
+      },
+    ];
+
+    // If default circles don't exist, create them
+    if (!defaultCirclesExist) {
+      console.log("Creating default circles in database...");
+      const createdCircles = await Circle.insertMany(defaultCirclesData);
+      console.log(`Created ${createdCircles.length} default circles`);
+
+      // Update admin user to be guru of these circles
+      if (adminUser) {
+        await User.findByIdAndUpdate(adminUser._id, {
+          $addToSet: { isGuru: { $each: createdCircles.map(circle => circle._id) } }
+        });
+        console.log("Updated admin user to be guru of default circles");
+      }
+    }
+
+    // Fetch all circles (will now include the default ones too)
     const circles = await Circle.find()
       .select("name image bio members rank isDefault")
       .populate("guru", "username name profilePicture");
+    
+    console.log("Fetched circles from database:", circles.length);
+    
+    // Sort by rank
+    circles.sort((a, b) => (a.rank || 0) - (b.rank || 0));
 
-    res.status(200).json({
+    return res.status(200).json({
       status: "success",
       data: {
         circles,
       },
     });
   } catch (error: any) {
+    console.error("Error fetching circles:", error);
     res.status(500).json({
       status: "error",
       message: error.message,
