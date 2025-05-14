@@ -11,14 +11,26 @@ import Notification, { NotificationType } from "../models/notificationModel";
 // Get all circles (public info only)
 export const getAllCircles = async (req: Request, res: Response) => {
   try {
-    // Find admin user to be used as the guru for default circles
-    const adminUser = await User.findOne({ isAdmin: true }) || await User.findOne();
+    // Find specific admin user to be used as the guru for default circles
+    let adminUser = await User.findOne({ 
+      _id: "682499455e350516d6b68915",
+      isAdmin: true 
+    });
     
+    // Fallback to any admin user if the specific one is not found
     if (!adminUser) {
-      return res.status(500).json({
-        status: "error",
-        message: "No users found in the system",
-      });
+      adminUser = await User.findOne({ isAdmin: true }) || await User.findOne();
+      
+      if (!adminUser) {
+        return res.status(500).json({
+          status: "error",
+          message: "No users found in the system",
+        });
+      }
+      
+      console.log(`Using fallback admin: ${adminUser.username} (${adminUser._id})`);
+    } else {
+      console.log(`Using primary admin: ${adminUser.username} (${adminUser._id})`);
     }
 
     // Check if default circles exist
@@ -31,6 +43,7 @@ export const getAllCircles = async (req: Request, res: Response) => {
         image: "/uploads/circles/stoic-warriors.jpg",
         bio: "A circle for those who practice stoicism in their daily lives.",
         guru: adminUser._id,
+        members: [adminUser._id],
         rank: 1,
         isDefault: true,
       },
@@ -39,6 +52,7 @@ export const getAllCircles = async (req: Request, res: Response) => {
         image: "/uploads/circles/meditation.jpg",
         bio: "Daily meditation practice and mindfulness techniques.",
         guru: adminUser._id,
+        members: [adminUser._id],
         rank: 2,
         isDefault: true,
       },
@@ -47,6 +61,7 @@ export const getAllCircles = async (req: Request, res: Response) => {
         image: "/uploads/circles/leadership.jpg",
         bio: "Discussing leadership principles based on stoic philosophy.",
         guru: adminUser._id,
+        members: [adminUser._id],
         rank: 3,
         isDefault: true,
       },
@@ -55,6 +70,7 @@ export const getAllCircles = async (req: Request, res: Response) => {
         image: "/uploads/circles/leadership.jpg",
         bio: "Discussing how can be the best parent that create future leaders.",
         guru: adminUser._id,
+        members: [adminUser._id],
         rank: 4,
         isDefault: true,
       },
@@ -63,6 +79,7 @@ export const getAllCircles = async (req: Request, res: Response) => {
         image: "/uploads/circles/leadership.jpg",
         bio: "Heal yourself after you have tried your best whether its a relationship or anything that broke you and you want a great comeback from the biggest disaster of your life.",
         guru: adminUser._id,
+        members: [adminUser._id],
         rank: 5,
         isDefault: true,
       },
@@ -71,6 +88,7 @@ export const getAllCircles = async (req: Request, res: Response) => {
         image: "/uploads/circles/leadership.jpg",
         bio: "Some mindblowing facts that can blow your mind and ready your mind to train to become a stoic.",
         guru: adminUser._id,
+        members: [adminUser._id],
         rank: 6,
         isDefault: true,
       },
@@ -79,6 +97,7 @@ export const getAllCircles = async (req: Request, res: Response) => {
     // If default circles don't exist, create them
     if (!defaultCirclesExist) {
       console.log("Creating default circles in database...");
+      
       const createdCircles = await Circle.insertMany(defaultCirclesData);
       console.log(`Created ${createdCircles.length} default circles`);
 
@@ -211,6 +230,7 @@ export const createDefaultCircles = async (req: Request, res: Response) => {
         bio: "Master your mind and actions through stoic discipline and focus techniques",
         image: "default-discipline-image.jpg",
         guru: userId,
+        members: [userId],
         isDefault: true,
       },
       {
@@ -218,6 +238,7 @@ export const createDefaultCircles = async (req: Request, res: Response) => {
         bio: "Apply stoic principles to parenthood and family relationships",
         image: "default-parent-image.jpg",
         guru: userId,
+        members: [userId],
         isDefault: true,
       },
       {
@@ -225,6 +246,7 @@ export const createDefaultCircles = async (req: Request, res: Response) => {
         bio: "Find meaning and direction in work through stoic purpose-seeking",
         image: "default-career-image.jpg",
         guru: userId,
+        members: [userId],
         isDefault: true,
       },
       {
@@ -232,6 +254,7 @@ export const createDefaultCircles = async (req: Request, res: Response) => {
         bio: "Navigate difficult emotions and relationships with stoic resilience",
         image: "default-heartbreak-image.jpg",
         guru: userId,
+        members: [userId],
         isDefault: true,
       },
       {
@@ -239,6 +262,7 @@ export const createDefaultCircles = async (req: Request, res: Response) => {
         bio: "Explore psychological insights through the lens of stoic philosophy",
         image: "default-psychology-image.jpg",
         guru: userId,
+        members: [userId],
         isDefault: true,
       },
     ];
@@ -277,6 +301,17 @@ export const createDefaultCircles = async (req: Request, res: Response) => {
 // Send a request to join a circle
 export const requestToJoinCircle = async (req: Request, res: Response) => {
   try {
+    console.log('Request body:', JSON.stringify(req.body));
+    console.log('Content-Type:', req.headers['content-type']);
+    
+    // Check if body is undefined or empty
+    if (!req.body || Object.keys(req.body).length === 0) {
+      return res.status(400).json({
+        status: "error",
+        message: "Request body is empty. Make sure you're sending a JSON payload with 'Content-Type: application/json' header."
+      });
+    }
+    
     const { circleId, reason } = req.body;
     const userId = req.user?._id;
 
@@ -322,11 +357,42 @@ export const requestToJoinCircle = async (req: Request, res: Response) => {
       });
     }
 
+    // Debug guru and user info
+    console.log('Circle guru ID:', circle.guru ? circle.guru.toString() : 'undefined');
+    console.log('User ID:', userId ? userId.toString() : 'undefined');
+
+    // Check if the circle has a valid guru
+    if (!circle.guru) {
+      return res.status(400).json({
+        status: "error",
+        message: "This circle doesn't have a guru assigned. Cannot send join request.",
+      });
+    }
+
+    // Check if the user is trying to join their own circle (user is the guru)
+    if (circle.guru.toString() === userId.toString()) {
+      console.log('User is the guru of this circle!');
+      return res.status(400).json({
+        status: "error",
+        message: "You are the guru of this circle and already a member.",
+      });
+    }
+    
+    // Let's get more details about the guru
+    const guruUser = await User.findById(circle.guru).select('_id username email');
+    console.log('Guru user details:', guruUser);
+
+    // Get the guru user ID to avoid any potential issues
+    const guruId = guruUser ? guruUser._id : circle.guru;
+    
+    console.log('From userId:', userId.toString());
+    console.log('To guruId:', guruId.toString());
+    
     // Create join request
     const request = await CircleRequest.create({
       type: RequestType.JOIN,
       from: userId,
-      to: circle.guru,
+      to: guruId,
       circle: circleId,
       reason: reason || "I would like to join this circle",
     });
@@ -457,6 +523,7 @@ export const processCircleRequest = async (req: Request, res: Response) => {
           bio: request.circleBio,
           image: "default-circle-image.jpg", // Default image
           guru: request.from,
+          members: [request.from], // Add the creator as a member as well
           isDefault: false,
         });
 
@@ -520,13 +587,24 @@ export const requestToCreateCircle = async (req: Request, res: Response) => {
       });
     }
 
-    // Find admin user to send request to
-    const admin = await User.findOne({ isAdmin: true });
+    // Find specific admin user to send request to
+    let admin = await User.findOne({ 
+      _id: "682499455e350516d6b68915",
+      isAdmin: true 
+    });
+    
+    // Fallback to any admin if specific one not found
     if (!admin) {
-      return res.status(500).json({
-        status: "error",
-        message: "No admin found to process request",
-      });
+      admin = await User.findOne({ isAdmin: true });
+      if (!admin) {
+        return res.status(500).json({
+          status: "error",
+          message: "No admin found to process request",
+        });
+      }
+      console.log(`Using fallback admin for circle creation request: ${admin.username}`);
+    } else {
+      console.log(`Using primary admin for circle creation request: ${admin.username}`);
     }
 
     // Check if there's a pending request

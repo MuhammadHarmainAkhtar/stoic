@@ -7,7 +7,8 @@
     "dev": "nodemon",
     "build": "tsc",
     "start": "node dist/server.js",
-    "seed:circles": "tsc && node dist/seed/seedDefaultCircles.js"
+    "seed:circles": "tsc && node dist/seed/seedDefaultCircles.js",
+    "update:circle-gurus": "tsc && node dist/scripts/update-circle-gurus.js"
   },
   "keywords": [],
   "author": "",
