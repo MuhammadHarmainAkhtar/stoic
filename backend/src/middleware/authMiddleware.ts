@@ -13,7 +13,10 @@ declare global {
 }
 
 interface DecodedToken {
-  id: string;
+  id?: string;
+  userId?: string; // Add userId field as it's used in the token
+  email?: string;
+  verified?: boolean;
   iat: number;
   exp: number;
 }
@@ -48,23 +51,42 @@ export const protect: RequestHandler = async (req, res, next) => {
       process.env.JWT_SECRET || "default_secret"
     ) as DecodedToken;
 
-    // Check if user still exists
-    const user = await User.findById(decoded.id);
-    if (!user) {
+    console.log("Decoded token:", JSON.stringify(decoded));
+
+    // Check if user still exists - support both id and userId fields
+    const userId = decoded.userId || decoded.id;
+    
+    if (!userId) {
       res.status(401).json({
         status: "error",
-        message: "The user belonging to this token no longer exists.",
+        message: "Invalid token structure. User ID not found in token.",
+        debug: { decodedToken: decoded }
       });
       return;
     }
 
+    const user = await User.findById(userId);
+    if (!user) {
+      console.log(`User not found with ID: ${userId}`);
+      res.status(401).json({
+        status: "error",
+        message: "The user belonging to this token no longer exists.",
+        debug: { userId }
+      });
+      return;
+    }
+
+    console.log(`User found and authenticated: ${user.username} (${user._id})`);
+    
     // Grant access to protected route
     req.user = user;
     next();
   } catch (error: any) {
+    console.error("Auth middleware error:", error.message);
     res.status(401).json({
       status: "error",
       message: "Invalid token or session expired. Please log in again.",
+      error: error.message
     });
   }
 };
