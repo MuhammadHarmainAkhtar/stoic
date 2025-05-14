@@ -29,6 +29,9 @@
   "dependencies": {
     "@react-three/drei": "^10.0.7",
     "@react-three/fiber": "^9.1.2",
+    "@types/simple-peer": "^9.11.8",
+    "@types/socket.io": "^3.0.2",
+    "@types/uuid": "^10.0.0",
     "bcryptjs": "^3.0.2",
     "cookie": "^1.0.2",
     "cookie-parser": "^1.4.7",
@@ -39,7 +42,10 @@
     "mongodb": "^6.16.0",
     "mongoose": "^8.14.0",
     "nodemailer": "^6.10.1",
+    "simple-peer": "^9.11.1",
+    "socket.io": "^4.8.1",
     "three": "^0.176.0",
-    "three-stdlib": "^2.35.16"
+    "three-stdlib": "^2.35.16",
+    "uuid": "^11.1.0"
   }
 }

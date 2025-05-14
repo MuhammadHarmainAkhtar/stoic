@@ -13,9 +13,9 @@ export const schemaSignup = Joi.object({
     .required()
     .pattern(new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$")),
   confirmPassword: Joi.string()
-    .valid(Joi.ref('password'))
+    .valid(Joi.ref("password"))
     .required()
-    .messages({ 'any.only': 'Passwords must match' }),
+    .messages({ "any.only": "Passwords must match" }),
 });
 
 export const schemaLogin = Joi.object({

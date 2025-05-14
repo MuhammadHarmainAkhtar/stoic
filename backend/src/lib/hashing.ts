@@ -1,13 +1,13 @@
-import { compare, hash } from "bcryptjs";
+import bcrypt from "bcrypt";
 import { createHmac } from "crypto";
 
-export const doHash = (value: string, saltValue: number) => {
-  const result = hash(value, saltValue);
+export const doHash = async (value: string, saltValue: number) => {
+  const result = await bcrypt.hash(value, saltValue);
   return result;
 };
 
-export const doHashValidation = (value: string, hashedValue: string) => {
-  const result = compare(value, hashedValue);
+export const doHashValidation = async (value: string, hashedValue: string) => {
+  const result = await bcrypt.compare(value, hashedValue);
   return result;
 };
 
