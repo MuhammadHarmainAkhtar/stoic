@@ -8,6 +8,7 @@ import authRouter from "./routes/authRoutes";
 // Use dynamic import to work around module resolution issues
 // This is a cleaner approach than using require
 import circleRoutes from "./routes/circleRoutes";
+import adminRoutes from "./routes/adminRoutes";
 import cookieParser from "cookie-parser";
 import SocketManager from "./lib/socketManager";
 
@@ -67,6 +68,7 @@ mongoose
 // Routes
 app.use("/api/auth", authRouter);
 app.use("/api", circleRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");

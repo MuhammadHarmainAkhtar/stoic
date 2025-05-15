@@ -13,6 +13,9 @@ export enum NotificationType {
   CIRCLE_CREATED = "circle_created",
   MEETING_SCHEDULED = "meeting_scheduled",
   DIRECT_MESSAGE = "direct_message",
+  CIRCLE_ADMIN_ACTION = "circle_admin_action",
+  CIRCLE_MEMBER_LEAVE = "circle_member_leave",
+  CIRCLE_GURU_INVITE = "circle_guru_invite",
 }
 
 export interface INotification extends Document {

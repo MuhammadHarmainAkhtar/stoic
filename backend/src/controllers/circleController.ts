@@ -518,12 +518,25 @@ export const processCircleRequest = async (req: Request, res: Response) => {
         request.circleName &&
         request.circleBio
       ) {
+        // Find admin user to add as a member
+        let adminUser = await User.findOne({ 
+          _id: "682499455e350516d6b68915",
+          isAdmin: true 
+        });
+        
+        if (!adminUser) {
+          adminUser = await User.findOne({ isAdmin: true });
+        }
+
+        // Create circle with both creator and admin as members
         const newCircle = await Circle.create({
           name: request.circleName,
           bio: request.circleBio,
           image: "default-circle-image.jpg", // Default image
           guru: request.from,
-          members: [request.from], // Add the creator as a member as well
+          members: adminUser 
+            ? [request.from, adminUser._id] // Add both creator and admin as members
+            : [request.from], // Fallback to just creator if no admin
           isDefault: false,
         });
 
@@ -531,6 +544,13 @@ export const processCircleRequest = async (req: Request, res: Response) => {
         await User.findByIdAndUpdate(request.from, {
           $addToSet: { isGuru: newCircle._id },
         });
+        
+        // Add circle to admin's joined circles if admin exists
+        if (adminUser) {
+          await User.findByIdAndUpdate(adminUser._id, {
+            $addToSet: { joinedCircles: newCircle._id },
+          });
+        }
 
         // Create notification for the user
         await Notification.create({
@@ -892,6 +912,23 @@ export const removeCircleMember = async (req: Request, res: Response) => {
         message: "User is not a member of this circle",
       });
     }
+    
+    // Check if the guru is trying to remove themselves - this isn't allowed
+    if (circle.guru.toString() === memberUserId.toString()) {
+      return res.status(400).json({
+        status: "error",
+        message: "As a guru, you cannot remove yourself from the circle. You can only transfer ownership or leave.",
+      });
+    }
+    
+    // Check if the user is the main admin (cannot be removed by guru)
+    const isMainAdmin = memberUserId.toString() === "682499455e350516d6b68915";
+    if (isMainAdmin) {
+      return res.status(403).json({
+        status: "error",
+        message: "The main administrator cannot be removed from circles. Only they can leave voluntarily.",
+      });
+    }
 
     // Remove member from circle
     await Circle.findByIdAndUpdate(circleId, {
@@ -902,6 +939,16 @@ export const removeCircleMember = async (req: Request, res: Response) => {
     await User.findByIdAndUpdate(memberUserId, {
       $pull: { joinedCircles: circleId },
     });
+    
+    // Check if circle is now empty and delete if necessary
+    const updatedCircle = await Circle.findById(circleId);
+    if (updatedCircle && updatedCircle.members.length === 0 && !updatedCircle.isDefault) {
+      await Circle.findByIdAndDelete(circleId);
+      return res.status(200).json({
+        status: "success",
+        message: "Member removed and empty circle deleted",
+      });
+    }
 
     res.status(200).json({
       status: "success",
@@ -957,6 +1004,18 @@ export const leaveCircle = async (req: Request, res: Response) => {
       });
     }
 
+    // Get user data for notification
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        status: "error",
+        message: "User not found",
+      });
+    }
+    
+    // Check if this is the main admin leaving (special handling)
+    const isMainAdmin = userId.toString() === "682499455e350516d6b68915";
+
     // Remove user from circle members
     await Circle.findByIdAndUpdate(circleId, {
       $pull: { members: userId },
@@ -966,6 +1025,42 @@ export const leaveCircle = async (req: Request, res: Response) => {
     await User.findByIdAndUpdate(userId, {
       $pull: { joinedCircles: circleId },
     });
+    
+    // If main admin is leaving, notify the circle guru
+    if (isMainAdmin) {
+      await Notification.create({
+        type: NotificationType.CIRCLE_ADMIN_ACTION,
+        from: userId,
+        to: circle.guru,
+        circle: circleId,
+        message: `The administrator ${user.username} has left your circle "${circle.name}"`,
+      });
+    }
+    
+    // Notify the main admin when a user leaves (if main admin is not the one leaving)
+    if (!isMainAdmin) {
+      // Find main admin
+      const mainAdmin = await User.findOne({ _id: "682499455e350516d6b68915" });
+      if (mainAdmin) {
+        await Notification.create({
+          type: NotificationType.CIRCLE_MEMBER_LEAVE,
+          from: userId,
+          to: mainAdmin._id,
+          circle: circleId,
+          message: `User ${user.username} has left the circle "${circle.name}"`,
+        });
+      }
+    }
+
+    // Check if circle is now empty and delete if it's not a default circle
+    const updatedCircle = await Circle.findById(circleId);
+    if (updatedCircle && updatedCircle.members.length === 0 && !updatedCircle.isDefault) {
+      await Circle.findByIdAndDelete(circleId);
+      return res.status(200).json({
+        status: "success",
+        message: "Left circle successfully. Circle was empty and has been deleted.",
+      });
+    }
 
     res.status(200).json({
       status: "success",

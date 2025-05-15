@@ -4,6 +4,7 @@ export enum RequestType {
   JOIN = "join",
   CREATE = "create",
   INVITE = "invite",
+  GURU_INVITE = "guru_invite",
 }
 
 export enum RequestStatus {

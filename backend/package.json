@@ -8,7 +8,9 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "seed:circles": "tsc && node dist/seed/seedDefaultCircles.js",
-    "update:circle-gurus": "tsc && node dist/scripts/update-circle-gurus.js"
+    "update:circle-gurus": "tsc && node dist/scripts/update-circle-gurus.js",
+    "update:circle-configs": "tsc && node dist/scripts/update-circle-configs.js",
+    "verify:admin-protections": "tsc && node dist/scripts/verify-admin-protections.js"
   },
   "keywords": [],
   "author": "",
