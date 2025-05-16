@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "seed:circles": "tsc && node dist/seed/seedDefaultCircles.js",
+    "seed:test-data": "tsc && node dist/scripts/seed-test-data.js",
     "update:circle-gurus": "tsc && node dist/scripts/update-circle-gurus.js",
     "update:circle-configs": "tsc && node dist/scripts/update-circle-configs.js",
     "verify:admin-protections": "tsc && node dist/scripts/verify-admin-protections.js"
@@ -33,6 +34,7 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "^9.8.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/node": "^22.15.2",

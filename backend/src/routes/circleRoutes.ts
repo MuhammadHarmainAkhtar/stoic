@@ -5,6 +5,7 @@ import * as commentController from "../controllers/commentController";
 import * as notificationController from "../controllers/notificationController";
 import * as meetingController from "../controllers/meetingController";
 import * as messageController from "../controllers/messageController";
+import * as adminController from "../controllers/adminController"; // Add admin controller import
 import {
   protect,
   restrictToAdmin,
@@ -49,6 +50,11 @@ router.post(
   "/circles/invite/process",
   protect,
   wrapAsync(circleController.processCircleInvite)
+);
+router.post(
+  "/circles/guru/invite/process",
+  protect,
+  wrapAsync(adminController.processGuruInvite)
 );
 router.post(
   "/circles/members/remove",

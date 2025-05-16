@@ -8,6 +8,13 @@ const router = express.Router();
 // Base protection middleware
 router.use(protect);
 
+// User-facing route for processing guru invites (not admin-restricted)
+// IMPORTANT: This must be defined BEFORE the adminRouter to prevent admin restrictions
+router.post(
+  "/circles/guru/invite/process",
+  wrapAsync(adminController.processGuruInvite)
+);
+
 // Admin-specific routes
 const adminRouter = express.Router();
 adminRouter.use(restrictToAdmin);
@@ -30,11 +37,5 @@ adminRouter.post(
 
 // Register admin routes
 router.use(adminRouter);
-
-// User-facing route for processing guru invites (not admin-restricted)
-router.post(
-  "/circles/guru/invite/process",
-  wrapAsync(adminController.processGuruInvite)
-);
 
 export default router;

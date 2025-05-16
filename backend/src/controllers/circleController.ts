@@ -796,9 +796,9 @@ export const processCircleInvite = async (req: Request, res: Response) => {
       });
     }
 
-    // Find the invite
+    // Find the invite (support both regular circle invites and guru invites)
     const invite = await CircleRequest.findById(inviteId);
-    if (!invite || invite.type !== RequestType.INVITE) {
+    if (!invite || (invite.type !== RequestType.INVITE && invite.type !== RequestType.GURU_INVITE)) {
       return res.status(404).json({
         status: "error",
         message: "Invite not found",
@@ -826,33 +826,119 @@ export const processCircleInvite = async (req: Request, res: Response) => {
     invite.status = status;
     await invite.save();
 
-    // If accepted, add user to circle members
-    if (status === RequestStatus.APPROVED) {
-      await Circle.findByIdAndUpdate(invite.circle, {
-        $addToSet: { members: userId },
-      });
+    // Handle based on invite type
+    if (invite.type === RequestType.INVITE) {
+      // Regular circle invite processing
+      if (status === RequestStatus.APPROVED) {
+        await Circle.findByIdAndUpdate(invite.circle, {
+          $addToSet: { members: userId },
+        });
 
-      await User.findByIdAndUpdate(userId, {
-        $addToSet: { joinedCircles: invite.circle },
-      });
+        await User.findByIdAndUpdate(userId, {
+          $addToSet: { joinedCircles: invite.circle },
+        });
 
-      // Notify guru that invite was accepted
-      await Notification.create({
-        type: NotificationType.CIRCLE_REQUEST_ACCEPTED,
-        from: userId,
-        to: invite.from,
-        circle: invite.circle,
-        message: `User has accepted your invitation to "${circle.name}"`,
-      });
-    } else if (status === RequestStatus.REJECTED) {
-      // Notify guru that invite was rejected
-      await Notification.create({
-        type: NotificationType.CIRCLE_REQUEST_REJECTED,
-        from: userId,
-        to: invite.from,
-        circle: invite.circle,
-        message: `User has declined your invitation to "${circle.name}"`,
-      });
+        // Notify guru that invite was accepted
+        await Notification.create({
+          type: NotificationType.CIRCLE_REQUEST_ACCEPTED,
+          from: userId,
+          to: invite.from,
+          circle: invite.circle,
+          message: `User has accepted your invitation to "${circle.name}"`,
+        });
+      } else if (status === RequestStatus.REJECTED) {
+        // Notify guru that invite was rejected
+        await Notification.create({
+          type: NotificationType.CIRCLE_REQUEST_REJECTED,
+          from: userId,
+          to: invite.from,
+          circle: invite.circle,
+          message: `User has declined your invitation to "${circle.name}"`,
+        });
+      }
+    } else if (invite.type === RequestType.GURU_INVITE) {
+      // Guru invite processing
+      if (status === RequestStatus.APPROVED) {
+        // Get current guru details
+        const currentGuru = await User.findById(circle.guru);
+
+        // Update circle with new guru
+        const oldGuruId = circle.guru;
+        circle.guru = userId;
+        await circle.save();
+
+        // Add circle to new guru's list of guru circles
+        await User.findByIdAndUpdate(userId, {
+          $addToSet: { isGuru: circle._id },
+        });
+
+        // Remove circle from old guru's list of guru circles
+        if (oldGuruId) {
+          await User.findByIdAndUpdate(oldGuruId, {
+            $pull: { isGuru: circle._id },
+          });
+        }
+
+        // Make sure the new guru is a member of the circle
+        if (!circle.members.includes(userId)) {
+          circle.members.push(userId);
+          await circle.save();
+
+          // Add circle to user's joined circles as well
+          await User.findByIdAndUpdate(userId, {
+            $addToSet: { joinedCircles: circle._id },
+          });
+        }
+
+        // Notify admin that invite was accepted
+        await Notification.create({
+          type: NotificationType.CIRCLE_REQUEST_ACCEPTED,
+          from: userId,
+          to: invite.from,
+          circle: circle._id,
+          message: `User has accepted your invitation to become guru of "${circle.name}"`,
+        });
+
+        // Notify the old guru if they exist
+        if (currentGuru) {
+          await Notification.create({
+            type: NotificationType.CIRCLE_ADMIN_ACTION,
+            from: invite.from,
+            to: currentGuru._id,
+            circle: circle._id,
+            message: `You are no longer the guru of "${circle.name}" circle, a new guru has been appointed`,
+          });
+        }
+        
+        // Notify all circle members about the new guru
+        const user = await User.findById(userId);
+        if (user && circle.members.length > 0) {
+          for (const memberId of circle.members) {
+            // Skip notifications to the new guru and the admin who initiated the change
+            if (memberId.toString() === userId.toString() || 
+                memberId.toString() === invite.from.toString()) {
+              continue;
+            }
+            
+            await Notification.create({
+              type: NotificationType.CIRCLE_ADMIN_ACTION,
+              from: userId,
+              to: memberId,
+              circle: circle._id,
+              message: `${user.username} is now the new guru of "${circle.name}" circle`,
+            });
+          }
+        }
+      } else if (status === RequestStatus.REJECTED) {
+        // Notify admin that invite was rejected
+        await Notification.create({
+          type: NotificationType.CIRCLE_REQUEST_REJECTED,
+          from: userId,
+          to: invite.from,
+          circle: circle._id,
+          message: `User has declined your invitation to become guru of "${circle.name}"`,
+        });
+      }
     }
 
     res.status(200).json({
