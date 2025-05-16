@@ -1163,7 +1163,11 @@ export const leaveCircle = async (req: Request, res: Response) => {
 // Update circle ranking
 export const updateCircleRanking = async (req: Request, res: Response) => {
   try {
+    // Don't try to extract any parameters from the request
+    console.log("Updating circle rankings...");
+    
     const circles = await Circle.find();
+    console.log(`Found ${circles.length} circles to update rankings for`);
 
     // Process each circle to calculate rank
     for (const circle of circles) {
@@ -1182,6 +1186,7 @@ export const updateCircleRanking = async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
+    console.error("Error updating circle rankings:", error);
     res.status(500).json({
       status: "error",
       message: error.message,

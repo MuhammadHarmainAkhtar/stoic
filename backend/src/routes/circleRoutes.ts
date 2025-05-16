@@ -63,7 +63,7 @@ router.post(
 );
 router.post("/circles/leave", protect, wrapAsync(circleController.leaveCircle));
 router.get(
-  "/circles/ranking",
+  "/circles-ranking",  // Change from /circles/ranking to /circles-ranking to avoid route conflict
   protect,
   wrapAsync(circleController.updateCircleRanking)
 );
