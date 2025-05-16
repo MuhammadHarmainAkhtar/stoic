@@ -31,10 +31,4 @@ adminRouter.post(
 // Register admin routes
 router.use(adminRouter);
 
-// User-facing route for processing guru invites (not admin-restricted)
-router.post(
-  "/circles/guru/invite/process",
-  wrapAsync(adminController.processGuruInvite)
-);
-
 export default router;

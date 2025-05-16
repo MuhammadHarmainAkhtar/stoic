@@ -5,8 +5,6 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import { createServer } from "http";
 import authRouter from "./routes/authRoutes";
-// Use dynamic import to work around module resolution issues
-// This is a cleaner approach than using require
 import circleRoutes from "./routes/circleRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import cookieParser from "cookie-parser";

@@ -125,6 +125,47 @@ export const removeGuruFromCircle = async (req: Request, res: Response) => {
         circle: circle._id,
         message: `You have been assigned as the new guru of "${circle.name}" circle by an administrator`,
       });
+      
+      // Notify all circle members about the guru change
+      const newGuru = await User.findById(newGuruId);
+      if (newGuru && circle.members.length > 0) {
+        for (const memberId of circle.members) {
+          // Skip notifications to the new guru, old guru, and the admin
+          if (memberId.toString() === newGuruId.toString() || 
+              memberId.toString() === currentGuru._id.toString() ||
+              memberId.toString() === adminId.toString()) {
+            continue;
+          }
+          
+          await Notification.create({
+            type: NotificationType.CIRCLE_ADMIN_ACTION,
+            from: adminId,
+            to: memberId,
+            circle: circle._id,
+            message: `${newGuru.username} is now the new guru of "${circle.name}" circle`,
+          });
+        }
+      }
+    } else {
+      // If admin becomes the guru, notify all members
+      const admin = await User.findById(adminId);
+      if (admin && circle.members.length > 0) {
+        for (const memberId of circle.members) {
+          // Skip notifications to the old guru and the admin
+          if (memberId.toString() === currentGuru._id.toString() ||
+              memberId.toString() === adminId.toString()) {
+            continue;
+          }
+          
+          await Notification.create({
+            type: NotificationType.CIRCLE_ADMIN_ACTION,
+            from: adminId,
+            to: memberId,
+            circle: circle._id,
+            message: `${admin.username} (admin) is now the new guru of "${circle.name}" circle`,
+          });
+        }
+      }
     }
 
     res.status(200).json({
@@ -253,7 +294,7 @@ export const removeCircleContent = async (req: Request, res: Response) => {
 // Send invite for a user to become guru of a circle
 export const inviteUserAsGuru = async (req: Request, res: Response) => {
   try {
-    const { circleId, userId: targetUserId } = req.body;
+    const { circleId, targetUserId } = req.body;
     const adminId = req.user?._id;
 
     // Check if user is the main admin
@@ -268,6 +309,16 @@ export const inviteUserAsGuru = async (req: Request, res: Response) => {
         });
       }
     }
+
+    // Debug log the IDs and their validation results
+    console.log('Validating IDs:', {
+      circleId,
+      targetUserId,
+      circleIdType: typeof circleId,
+      targetUserIdType: typeof targetUserId,
+      isCircleIdValid: mongoose.Types.ObjectId.isValid(circleId),
+      isTargetUserIdValid: mongoose.Types.ObjectId.isValid(targetUserId)
+    });
 
     if (
       !mongoose.Types.ObjectId.isValid(circleId) ||
@@ -330,6 +381,22 @@ export const inviteUserAsGuru = async (req: Request, res: Response) => {
       circle: circleId,
       message: `You've been invited to become guru of the "${circle.name}" circle`,
     });
+    
+    // Inform current guru about potential replacement
+    const currentGuru = await User.findById(circle.guru);
+    if (currentGuru && currentGuru._id.toString() !== targetUserId.toString()) {
+      await Notification.create({
+        type: NotificationType.CIRCLE_ADMIN_ACTION,
+        from: adminId,
+        to: currentGuru._id,
+        circle: circleId,
+        message: `An admin has invited another user to potentially become the new guru of "${circle.name}" circle`,
+      });
+    }
+    
+    // Get admin username for logging
+    const admin = await User.findById(adminId);
+    console.log(`Admin ${admin?.username} (${adminId}) sent guru invite to user ${targetUserId} for circle "${circle.name}" (${circleId})`);
 
     res.status(201).json({
       status: "success",
@@ -351,6 +418,13 @@ export const processGuruInvite = async (req: Request, res: Response) => {
     const { inviteId, status } = req.body;
     const userId = req.user?._id;
 
+    // Debug log user and invite details
+    console.log('Processing guru invite:', {
+      inviteId,
+      status,
+      requestingUserId: userId
+    });
+
     if (!mongoose.Types.ObjectId.isValid(inviteId)) {
       return res.status(400).json({
         status: "error",
@@ -367,15 +441,34 @@ export const processGuruInvite = async (req: Request, res: Response) => {
 
     // Find the invite
     const invite = await CircleRequest.findById(inviteId);
+    console.log('Search result:', {
+      inviteFound: !!invite,
+      inviteType: invite?.type,
+      expectedType: RequestType.GURU_INVITE,
+      inviteDetails: invite
+    });
+
     if (!invite || invite.type !== RequestType.GURU_INVITE) {
       return res.status(404).json({
         status: "error",
         message: "Guru invite not found",
+        debug: { 
+          inviteExists: !!invite, 
+          inviteType: invite?.type,
+          expectedType: RequestType.GURU_INVITE 
+        }
       });
     }
 
+    // Debug log invite details
+    console.log('Found invite:', {
+      inviteToUserId: invite.to?.toString(),
+      requestingUserId: userId?.toString(),
+      isMatch: invite.to?.toString() === userId?.toString()
+    });
+
     // Check if user is the invite recipient
-    if (invite.to?.toString() !== userId.toString()) {
+    if (invite.to?.toString() !== userId?.toString()) {
       return res.status(403).json({
         status: "error",
         message: "You can only process your own invites",
