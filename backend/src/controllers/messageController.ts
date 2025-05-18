@@ -293,6 +293,34 @@ export const sendCircleMessage = async (req: Request, res: Response) => {
     try {
       // Use helper method
       socketManager.sendCircleMessage(circleId.toString(), message);
+      
+      // Create notifications for all circle members except the sender
+      const memberIdsToNotify = circle.members.filter(
+        memberId => memberId.toString() !== senderId.toString()
+      );
+      
+      // Add guru to notification recipients if not the sender
+      if (circle.guru.toString() !== senderId.toString()) {
+        memberIdsToNotify.push(circle.guru);
+      }
+      
+      // Get sender's name for the notification message
+      const sender = await User.findById(senderId).select("name username");
+      const senderName = sender?.name || sender?.username || "Someone";
+      
+      // Create a notification for each member
+      await Promise.all(
+        memberIdsToNotify.map(memberId => 
+          createNotification({
+            type: NotificationType.CIRCLE_MESSAGE,
+            from: senderId,
+            to: memberId,
+            circle: circleId,
+            message: `${senderName} posted in ${circle.name}: ${content.substring(0, 50)}${content.length > 50 ? '...' : ''}`,
+          })
+        )
+      );
+      
     } catch (socketError) {
       console.error("Socket error when sending circle message:", socketError);
     }
