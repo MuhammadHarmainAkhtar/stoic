@@ -9,6 +9,7 @@ import circleRoutes from "./routes/circleRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import cookieParser from "cookie-parser";
 import SocketManager from "./lib/socketManager";
+import userRoutes from "./routes/userRoutes";
 
 // Load environment variables
 dotenv.config({ path: ".env.local" });
@@ -67,6 +68,7 @@ mongoose
 app.use("/api/auth", authRouter);
 app.use("/api", circleRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/users", userRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");

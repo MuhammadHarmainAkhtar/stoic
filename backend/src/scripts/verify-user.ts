@@ -1,5 +1,5 @@
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
+import mongoose from "mongoose";
+import dotenv from "dotenv";
 
 dotenv.config({ path: ".env.local" });
 
@@ -8,13 +8,18 @@ if (!process.env.MONGODB_URI) {
   process.exit(1);
 }
 
+interface UserDocument extends mongoose.Document {
+  email: string;
+  verified: boolean;
+}
+
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(async () => {
     console.log("Connected to MongoDB");
 
     // Get the User model
-    const User = mongoose.model(
+    const User = mongoose.model<UserDocument>(
       "User",
       new mongoose.Schema({}, { strict: false })
     );
@@ -35,6 +40,6 @@ mongoose
     await mongoose.disconnect();
     console.log("Disconnected from MongoDB");
   })
-  .catch((err) => {
-    console.error("Error:", err);
+  .catch((err: Error) => {
+    console.error("Error:", err.message);
   });

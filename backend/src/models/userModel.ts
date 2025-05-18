@@ -5,7 +5,6 @@ export interface IUser extends Document {
   username: string;
   email: string;
   password: string;
-  name?: string;
   profilePicture?: string;
   bio?: string;
   verified: boolean;
@@ -42,11 +41,9 @@ const UserSchema: Schema = new Schema(
       required: true,
       minlength: 8,
     },
-    name: {
-      type: String,
-    },
     profilePicture: {
       type: String,
+      default: "uploads/profiles/Profile.png"
     },
     bio: {
       type: String,

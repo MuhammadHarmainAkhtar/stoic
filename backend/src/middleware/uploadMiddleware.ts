@@ -26,6 +26,12 @@ createDirIfNotExists(messageMediaDir);
 // Configure storage for different upload types
 const storage = multer.diskStorage({
   destination: (req: Request, file: Express.Multer.File, cb) => {
+    // Check if it's a direct profile picture update
+    if (req.path === "/profile/picture" || req.originalUrl.includes("/profile/picture")) {
+      cb(null, profilePicsDir);
+      return;
+    }
+    
     const uploadType = req.params.uploadType || "posts";
 
     switch (uploadType) {
@@ -46,6 +52,14 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     const ext = path.extname(file.originalname);
+    
+    // Check if it's a profile picture upload
+    if (req.path === "/profile/picture" || req.originalUrl.includes("/profile/picture")) {
+      const userId = req.user && req.user._id ? req.user._id.toString() : "unknown";
+      cb(null, `profile-${userId}-${uniqueSuffix}${ext}`);
+      return;
+    }
+    
     cb(null, file.fieldname + "-" + uniqueSuffix + ext);
   },
 });
