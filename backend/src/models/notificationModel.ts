@@ -17,6 +17,10 @@ export enum NotificationType {
   CIRCLE_ADMIN_ACTION = "circle_admin_action",
   CIRCLE_MEMBER_LEAVE = "circle_member_leave",
   CIRCLE_GURU_INVITE = "circle_guru_invite",
+  RITUAL_CREATED = "ritual_created",
+  RITUAL_ADOPTED = "ritual_adopted",
+  RITUAL_COMPLETED = "ritual_completed",
+  RITUAL_ABANDONED = "ritual_abandoned",
 }
 
 export interface INotification extends Document {
@@ -60,6 +64,10 @@ const notificationSchema: Schema = new Schema(
     comment: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "CircleComment",
+    },
+    ritual: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Ritual",
     },
     message: {
       type: String,

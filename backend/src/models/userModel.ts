@@ -14,6 +14,7 @@ export interface IUser extends Document {
   forgotPasswordTokenValidation?: number;
   joinedCircles: mongoose.Types.ObjectId[];
   savedPosts: mongoose.Types.ObjectId[];
+  adoptedRituals: mongoose.Types.ObjectId[];
   isGuru: mongoose.Types.ObjectId[];
   isAdmin: boolean;
   createdAt: Date;
@@ -79,6 +80,12 @@ const UserSchema: Schema = new Schema(
       {
         type: Schema.Types.ObjectId,
         ref: "CirclePost",
+      },
+    ],
+    adoptedRituals: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Ritual",
       },
     ],
     isGuru: [
