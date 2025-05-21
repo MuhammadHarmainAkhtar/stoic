@@ -7,6 +7,7 @@ export interface ICircle extends Document {
   guru: mongoose.Types.ObjectId;
   members: mongoose.Types.ObjectId[];
   posts: mongoose.Types.ObjectId[];
+  rituals: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
   rank?: number;
@@ -47,6 +48,12 @@ const circleSchema: Schema = new Schema(
         ref: "CirclePost",
       },
     ],
+    rituals: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Ritual",
+      },
+    ],
     rank: {
       type: Number,
       default: 0,
@@ -61,20 +68,41 @@ const circleSchema: Schema = new Schema(
   }
 );
 
-// Calculate rank based on members and upvotes
+// Calculate rank based on members, upvotes, and rituals
 circleSchema.methods.calculateRank = async function () {
   const CirclePost = mongoose.model("CirclePost");
+  const Ritual = mongoose.model("Ritual");
+  const Adoption = mongoose.model("Adoption");
+  
   const memberCount = this.members.length;
 
+  // Calculate post engagement
   const posts = await CirclePost.find({ circle: this._id });
-  let totalUpvotes = 0;
+  let totalPostUpvotes = 0;
 
   posts.forEach((post) => {
-    totalUpvotes += post.upvotes.length;
+    totalPostUpvotes += post.upvotes.length;
   });
 
-  // Simple ranking formula: member count + total upvotes
-  this.rank = memberCount + totalUpvotes;
+  // Calculate ritual engagement
+  const rituals = await Ritual.find({ circle: this._id });
+  let totalRitualScore = 0;
+
+  // Get adoption counts for each ritual
+  for (const ritual of rituals) {
+    const adoptionCount = await Adoption.countDocuments({ 
+      ritual: ritual._id, 
+      status: { $in: ['active', 'completed'] } 
+    });
+    
+    // Ritual score: upvotes + (adoptions * 3)
+    const ritualScore = ritual.stats.upvotes + (adoptionCount * 3);
+    totalRitualScore += ritualScore;
+  }
+
+  // Comprehensive ranking formula: 
+  // member count + post upvotes + ritual score (weighted higher)
+  this.rank = memberCount + totalPostUpvotes + (totalRitualScore * 1.5);
   await this.save();
 
   return this.rank;

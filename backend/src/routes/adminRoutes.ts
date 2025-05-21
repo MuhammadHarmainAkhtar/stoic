@@ -28,6 +28,22 @@ adminRouter.post(
   wrapAsync(adminController.inviteUserAsGuru)
 );
 
+// Report management routes (admin only)
+adminRouter.get(
+  "/reports",
+  wrapAsync(adminController.getReports)
+);
+
+adminRouter.get(
+  "/reports/:id",
+  wrapAsync(adminController.getReportById)
+);
+
+adminRouter.patch(
+  "/reports/:id",
+  wrapAsync(adminController.updateReportStatus)
+);
+
 // Register admin routes
 router.use(adminRouter);
 

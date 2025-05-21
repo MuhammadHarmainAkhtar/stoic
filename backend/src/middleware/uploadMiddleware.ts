@@ -16,12 +16,16 @@ const circleImagesDir = path.join(uploadsDir, "circles");
 const postMediaDir = path.join(uploadsDir, "posts");
 const profilePicsDir = path.join(uploadsDir, "profiles");
 const messageMediaDir = path.join(uploadsDir, "messages");
+const forumMediaDir = path.join(uploadsDir, "forum");
+const ritualMediaDir = path.join(uploadsDir, "rituals");
 
 createDirIfNotExists(uploadsDir);
 createDirIfNotExists(circleImagesDir);
 createDirIfNotExists(postMediaDir);
 createDirIfNotExists(profilePicsDir);
 createDirIfNotExists(messageMediaDir);
+createDirIfNotExists(forumMediaDir);
+createDirIfNotExists(ritualMediaDir);
 
 // Configure storage for different upload types
 const storage = multer.diskStorage({
@@ -43,6 +47,12 @@ const storage = multer.diskStorage({
         break;
       case "messages":
         cb(null, messageMediaDir);
+        break;
+      case "forum":
+        cb(null, forumMediaDir);
+        break;
+      case "rituals":
+        cb(null, ritualMediaDir);
         break;
       case "posts":
       default:

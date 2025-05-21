@@ -10,6 +10,10 @@ import adminRoutes from "./routes/adminRoutes";
 import cookieParser from "cookie-parser";
 import SocketManager from "./lib/socketManager";
 import userRoutes from "./routes/userRoutes";
+import forumRoutes from "./routes/forumRoutes";
+import ritualRoutes from "./routes/ritualRoutes";
+import wisdomRoutes from "./routes/wisdomRoutes";
+import profileRoutes from "./routes/profileRoutes";
 
 // Load environment variables
 dotenv.config({ path: ".env.local" });
@@ -69,6 +73,11 @@ app.use("/api/auth", authRouter);
 app.use("/api", circleRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/forum", forumRoutes);
+app.use("/api/rituals", ritualRoutes);
+app.use("/api/wisdom", wisdomRoutes);
+app.use("/api/profile", profileRoutes);
+
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");
