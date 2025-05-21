@@ -196,7 +196,10 @@ export const updatePost = async (req: Request, res: Response) => {
   try {
     const userId = req.user?._id;
     const { id } = req.params;
-    const { content, tags } = req.body;
+    
+    // Handle form-data properly - check if content or tags exist in req.body
+    const content = req.body?.content;
+    const tags = req.body?.tags;
     
     // Find post and check ownership
     const post = await Post.findById(id);
@@ -216,9 +219,33 @@ export const updatePost = async (req: Request, res: Response) => {
       });
     }
     
-    // Update post
+    // Update post content and tags if provided
     if (content) post.content = content;
     if (tags) post.tags = tags.split(',').map((tag: string) => tag.trim());
+    
+    // Check if there are uploaded files
+    const files = req.files as Express.Multer.File[] | undefined;
+    if (files && files.length > 0) {
+      // Update media URLs and type
+      post.mediaUrls = files.map(file => file.path);
+      
+      // Determine media type based on the first file
+      const mimeType = files[0].mimetype;
+      if (mimeType.startsWith('image/')) {
+        post.mediaType = PostMediaType.IMAGE;
+      } else if (mimeType.startsWith('video/')) {
+        post.mediaType = PostMediaType.VIDEO;
+      }
+    }
+    
+    await post.save();
+    
+    res.status(200).json({
+      status: "success",
+      data: {
+        post,
+      },
+    });
     
     await post.save();
     

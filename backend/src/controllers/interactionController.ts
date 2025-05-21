@@ -6,6 +6,7 @@ import Ritual from "../models/ritualModel";
 import User from "../models/userModel";
 import Circle from "../models/circleModel";
 import Notification, { NotificationType } from "../models/notificationModel";
+import Report from "../models/reportModel";
 
 // Helper to update content stats
 const updateContentStats = async (
@@ -403,12 +404,13 @@ export const reportContent = async (req: Request, res: Response) => {
       });
     }
     
+    // Use the imported Report model
+    
     // Check if the user already reported this content
-    const existingReport = await Interaction.findOne({
-      user: userId,
+    const existingReport = await Report.findOne({
+      reporter: userId,
       contentType,
       contentId,
-      type: InteractionType.REPORT,
     });
     
     if (existingReport) {
@@ -418,23 +420,21 @@ export const reportContent = async (req: Request, res: Response) => {
       });
     }
     
-    // Create report interaction
-    await Interaction.create({
-      user: userId,
+    // Create report in the dedicated Report model instead of Interaction
+    await Report.create({
+      reporter: userId,
       contentType,
       contentId,
-      type: InteractionType.REPORT,
-      reportReason: reason,
+      reason,
+      // Status defaults to PENDING
     });
     
-    // Update content stats
+    // Update content stats - still track the number of reports
     await updateContentStats(contentType, contentId, InteractionType.REPORT, true);
-    
-    // TODO: Notify admin about the report
     
     res.status(201).json({
       status: "success",
-      message: "Content reported successfully",
+      message: "Content reported successfully. An admin will review your report.",
     });
   } catch (error: any) {
     res.status(500).json({
@@ -601,6 +601,120 @@ export const getUserInteraction = async (req: Request, res: Response) => {
       status: "success",
       data: {
         interactions: userInteractions,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+};
+
+// Save content to user's profile (forum posts, rituals)
+export const saveContent = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?._id;
+    const { contentType, contentId } = req.body;
+    
+    // Validate contentType
+    if (!Object.values(ContentType).includes(contentType)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid content type",
+      });
+    }
+    
+    // Verify content exists
+    let content;
+    if (contentType === ContentType.POST) {
+      content = await Post.findById(contentId);
+    } else {
+      content = await Ritual.findById(contentId);
+    }
+    
+    if (!content) {
+      return res.status(404).json({
+        status: "error",
+        message: `${contentType} not found`,
+      });
+    }
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        status: "error",
+        message: "User not found",
+      });
+    }
+    
+    // Check if already saved
+    const existingSave = await Interaction.findOne({
+      user: userId,
+      contentType,
+      contentId,
+      type: InteractionType.SAVE,
+    });
+    
+    if (existingSave) {
+      // If already saved, remove the save (toggle functionality)
+      await Interaction.findByIdAndDelete(existingSave._id);
+      
+      // Update stats
+      await updateContentStats(contentType, contentId, InteractionType.SAVE, false);
+      
+      // Remove from user's saved items
+      if (contentType === ContentType.POST) {
+        user.savedForumPosts = user.savedForumPosts.filter(
+          (id: mongoose.Types.ObjectId) => id.toString() !== contentId.toString()
+        );
+      } else {
+        user.savedRituals = user.savedRituals.filter(
+          (id: mongoose.Types.ObjectId) => id.toString() !== contentId.toString()
+        );
+      }
+      
+      await user.save();
+      
+      return res.status(200).json({
+        status: "success",
+        message: `${contentType} unsaved successfully`,
+        data: {
+          saved: false,
+        },
+      });
+    }
+    
+    // Create new save interaction
+    const interaction = await Interaction.create({
+      user: userId,
+      contentType,
+      contentId,
+      type: InteractionType.SAVE,
+    });
+    
+    // Update stats
+    await updateContentStats(contentType, contentId, InteractionType.SAVE);
+    
+    // Add to user's saved items
+    if (contentType === ContentType.POST) {
+      if (!user.savedForumPosts.includes(contentId)) {
+        user.savedForumPosts.push(contentId);
+      }
+    } else {
+      if (!user.savedRituals.includes(contentId)) {
+        user.savedRituals.push(contentId);
+      }
+    }
+    
+    await user.save();
+    
+    res.status(201).json({
+      status: "success",
+      message: `${contentType} saved successfully`,
+      data: {
+        interaction,
+        saved: true,
       },
     });
   } catch (error: any) {

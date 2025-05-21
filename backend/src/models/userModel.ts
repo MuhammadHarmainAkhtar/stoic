@@ -14,7 +14,12 @@ export interface IUser extends Document {
   forgotPasswordTokenValidation?: number;
   joinedCircles: mongoose.Types.ObjectId[];
   savedPosts: mongoose.Types.ObjectId[];
+  savedForumPosts: mongoose.Types.ObjectId[];
+  savedRituals: mongoose.Types.ObjectId[];
+  archivedPosts: mongoose.Types.ObjectId[];
+  archivedRituals: mongoose.Types.ObjectId[];
   adoptedRituals: mongoose.Types.ObjectId[];
+  recentlyVisitedCircles: mongoose.Types.ObjectId[];
   isGuru: mongoose.Types.ObjectId[];
   isAdmin: boolean;
   createdAt: Date;
@@ -76,16 +81,49 @@ const UserSchema: Schema = new Schema(
         ref: "Circle",
       },
     ],
+    // Saved content
     savedPosts: [
       {
         type: Schema.Types.ObjectId,
         ref: "CirclePost",
       },
     ],
+    savedForumPosts: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Post",
+      },
+    ],
+    savedRituals: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Ritual",
+      },
+    ],
+    // Archived content (visible only to user)
+    archivedPosts: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Post",
+      },
+    ],
+    archivedRituals: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Ritual",
+      },
+    ],
     adoptedRituals: [
       {
         type: Schema.Types.ObjectId,
         ref: "Ritual",
+      },
+    ],
+    // Recently visited circles (max 10, works like a queue)
+    recentlyVisitedCircles: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Circle",
       },
     ],
     isGuru: [

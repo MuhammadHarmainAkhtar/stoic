@@ -49,6 +49,7 @@ router.delete(
 );
 router.post("/report", wrapAsync(interactionController.reportContent));
 router.post("/share", wrapAsync(interactionController.shareContent));
+router.post("/save", wrapAsync(interactionController.saveContent));
 router.get(
   "/user-interaction/:contentType/:contentId",
   wrapAsync(interactionController.getUserInteraction)

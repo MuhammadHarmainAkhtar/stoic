@@ -23,6 +23,7 @@ export interface IRitual extends Document {
   tags: string[];
   mediaUrls: string[];
   mediaType: string;
+  isArchived: boolean;
   stats: {
     upvotes: number;
     downvotes: number;
@@ -91,6 +92,10 @@ const RitualSchema: Schema = new Schema(
       type: String,
       enum: ["none", "image", "video"],
       default: "none",
+    },
+    isArchived: {
+      type: Boolean,
+      default: false,
     },
     stats: {
       upvotes: {

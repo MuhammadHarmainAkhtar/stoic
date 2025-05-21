@@ -18,7 +18,11 @@ router.post(
 );
 router.get("/", wrapAsync(postController.getPosts));
 router.get("/:id", wrapAsync(postController.getPostById));
-router.put("/:id", wrapAsync(postController.updatePost));
+router.put(
+  "/:id",
+  uploadMultiple("files", 5), // Allow up to 5 files
+  wrapAsync(postController.updatePost)
+);
 router.delete("/:id", wrapAsync(postController.deletePost));
 router.get("/user/:userId", wrapAsync(postController.getUserPosts));
 
@@ -38,6 +42,7 @@ router.delete(
 );
 router.post("/report", wrapAsync(interactionController.reportContent));
 router.post("/share", wrapAsync(interactionController.shareContent));
+router.post("/save", wrapAsync(interactionController.saveContent));
 router.get(
   "/user-interaction/:contentType/:contentId",
   wrapAsync(interactionController.getUserInteraction)

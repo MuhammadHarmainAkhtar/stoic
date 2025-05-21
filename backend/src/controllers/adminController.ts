@@ -9,6 +9,11 @@ import User from "../models/userModel";
 import Notification, { NotificationType } from "../models/notificationModel";
 import CirclePost from "../models/circlePostModel";
 import CircleComment from "../models/circleCommentModel";
+// Required imports for reports
+import Report, { ReportStatus } from "../models/reportModel";
+import Post from "../models/postModel";
+import Ritual from "../models/ritualModel";
+import { ContentType } from "../models/interactionModel";
 
 // Admin remove guru from circle
 export const removeGuruFromCircle = async (req: Request, res: Response) => {
@@ -554,6 +559,207 @@ export const processGuruInvite = async (req: Request, res: Response) => {
       status: "success",
       data: {
         invite,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+};
+
+// Get all reports with filtering and pagination
+export const getReports = async (req: Request, res: Response) => {
+  try {
+    const { 
+      page = 1, 
+      limit = 10, 
+      status, 
+      contentType,
+      sortBy = 'newest'
+    } = req.query;
+    
+    // Ensure user is admin
+    const adminId = req.user?._id;
+    const isAdmin = adminId && adminId.toString() === "682499455e350516d6b68915";
+    
+    if (!isAdmin) {
+      return res.status(403).json({
+        status: "error",
+        message: "Unauthorized access to admin resources",
+      });
+    }
+
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const skip = (pageNum - 1) * limitNum;
+    
+    // Build query
+    const query: any = {};
+    
+    // Filter by status if provided
+    if (status && Object.values(ReportStatus).includes(status as ReportStatus)) {
+      query.status = status;
+    }
+    
+    // Filter by content type if provided
+    if (contentType && Object.values(ContentType).includes(contentType as ContentType)) {
+      query.contentType = contentType;
+    }
+    
+    // Determine sort order
+    let sortOption: any = { createdAt: -1 }; // Default: newest
+    
+    if (sortBy === 'oldest') {
+      sortOption = { createdAt: 1 };
+    }
+    
+    // Get reports with pagination
+    const reports = await Report.find(query)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limitNum)
+      .populate('reporter', 'username profilePicture')
+      .populate({
+        path: 'contentId',
+        select: 'content title description',
+        populate: {
+          path: 'creator',
+          select: 'username profilePicture'
+        }
+      });
+    
+    // Get total count
+    const total = await Report.countDocuments(query);
+    
+    res.status(200).json({
+      status: "success",
+      data: {
+        reports,
+        pagination: {
+          total,
+          page: pageNum,
+          limit: limitNum,
+          pages: Math.ceil(total / limitNum),
+        },
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+};
+
+// Get report details by ID
+export const getReportById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    // Ensure user is admin
+    const adminId = req.user?._id;
+    const isAdmin = adminId && adminId.toString() === "682499455e350516d6b68915";
+    
+    if (!isAdmin) {
+      return res.status(403).json({
+        status: "error",
+        message: "Unauthorized access to admin resources",
+      });
+    }
+    
+    const report = await Report.findById(id)
+      .populate('reporter', 'username profilePicture email')
+      .populate({
+        path: 'contentId',
+        populate: {
+          path: 'creator',
+          select: 'username profilePicture email'
+        }
+      });
+    
+    if (!report) {
+      return res.status(404).json({
+        status: "error",
+        message: "Report not found",
+      });
+    }
+    
+    // Get the actual content based on contentType
+    let content;
+    if (report.contentType === ContentType.POST) {
+      content = await Post.findById(report.contentId)
+        .populate('creator', 'username profilePicture email');
+    } else {
+      content = await Ritual.findById(report.contentId)
+        .populate('creator', 'username profilePicture email');
+    }
+    
+    res.status(200).json({
+      status: "success",
+      data: {
+        report,
+        content,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+};
+
+// Update report status
+export const updateReportStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status, adminNotes } = req.body;
+    
+    // Ensure user is admin
+    const adminId = req.user?._id;
+    const isAdmin = adminId && adminId.toString() === "682499455e350516d6b68915";
+    
+    if (!isAdmin) {
+      return res.status(403).json({
+        status: "error",
+        message: "Unauthorized access to admin resources",
+      });
+    }
+    
+    // Validate status
+    if (!Object.values(ReportStatus).includes(status as ReportStatus)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid report status",
+      });
+    }
+    
+    const report = await Report.findById(id);
+    
+    if (!report) {
+      return res.status(404).json({
+        status: "error",
+        message: "Report not found",
+      });
+    }
+    
+    // Update report
+    report.status = status as ReportStatus;
+    if (adminNotes) report.adminNotes = adminNotes;
+    
+    // If the status is being changed from pending, add review timestamp
+    if (report.status !== ReportStatus.PENDING) {
+      report.reviewedAt = new Date();
+    }
+    
+    await report.save();
+    
+    res.status(200).json({
+      status: "success",
+      data: {
+        report,
       },
     });
   } catch (error: any) {

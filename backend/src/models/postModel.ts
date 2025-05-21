@@ -12,6 +12,7 @@ export interface IPost extends Document {
   mediaUrls: string[];
   mediaType: PostMediaType;
   tags: string[];
+  isArchived: boolean;
   stats: {
     upvotes: number;
     downvotes: number;
@@ -48,6 +49,10 @@ const PostSchema: Schema = new Schema(
     tags: {
       type: [String],
       default: [],
+    },
+    isArchived: {
+      type: Boolean,
+      default: false,
     },
     stats: {
       upvotes: {
