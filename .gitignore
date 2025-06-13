@@ -36,3 +36,10 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+deploy-temp
+awscliv2.zip
+aws
+.ebextensions
+.ebignore
+Procfile
+package-deploy.json
