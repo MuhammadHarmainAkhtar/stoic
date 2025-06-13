@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "npm run build && node dist/server.js",
     "seed:circles": "tsc && node dist/seed/seedDefaultCircles.js",
     "seed:test-data": "tsc && node dist/scripts/seed-test-data.js",
     "update:circle-gurus": "tsc && node dist/scripts/update-circle-gurus.js",
@@ -22,24 +22,27 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/multer": "^1.4.12",
     "@types/uuid": "^10.0.0",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.15.2",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "helmet": "^7.1.0",
+    "cookie-parser": "^1.4.6",
+    "@types/cookie-parser": "^1.4.7",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.14.0",
     "multer": "1.4.5-lts.2",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "typescript": "^5.8.3"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.8.0",
-    "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.1",
-    "@types/node": "^22.15.2",
     "nodemon": "^3.1.10",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "ts-node": "^10.9.2"
   }
 }
