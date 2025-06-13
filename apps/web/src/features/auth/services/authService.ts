@@ -10,8 +10,8 @@ import {
   VerifyForgotPasswordData
 } from '../types';
 
-// Use environment variable with fallback for local development
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+// Use environment variable with fallback for AWS deployment
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://stoic-backend-prod.eba-3vymbzmg.ap-south-1.elasticbeanstalk.com";
 
 export const authService = {
   // Login user
